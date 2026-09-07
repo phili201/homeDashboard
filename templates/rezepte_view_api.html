@@ -1,11 +1,10 @@
 {% extends "base.html" %}
+{% block title %}Rezept{% endblock %}
+
 {% block content %}
+<h1>{{ recipe.title }}</h1>
 
 <div class="card">
-    <h2>{{ recipe.title }}</h2>
-
-    <img src="{{ recipe.image }}" class="recipe-img-large">
-
     <h3>Zutaten</h3>
     <ul>
         {% for ing in recipe.ingredients %}
@@ -13,14 +12,8 @@
         {% endfor %}
     </ul>
 
-    <a class="tile" href="/einkaufsliste/add_from_api/{{ rid }}">🛒 Zutaten zur Einkaufsliste</a>
-
-    <h3>Zubereitung</h3>
-    <ol>
-        {% for step in recipe.steps %}
-        <li>{{ step }}</li>
-        {% endfor %}
-    </ol>
+    <a href="/einkaufsliste/add_from_api/{{ rid }}">
+        <button>Zur Einkaufsliste hinzufügen</button>
+    </a>
 </div>
-
 {% endblock %}

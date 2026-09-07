@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% block title %}Rezepte suchen{% endblock %}
+
 {% block content %}
+<h1>Rezepte suchen</h1>
 
-<div class="card">
-    <h2>🔍 Rezepte suchen</h2>
-
+<div class="card" style="max-width: 400px; margin: auto;">
     <form method="POST">
-        <input type="text" name="query" placeholder="z.B. Lasagne, Pancakes, Pasta" required>
+        <label>Suchbegriff</label>
+        <input name="query">
         <button type="submit">Suchen</button>
     </form>
 </div>
-
 {% endblock %}

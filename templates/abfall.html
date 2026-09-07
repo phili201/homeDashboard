@@ -1,21 +1,16 @@
 {% extends "base.html" %}
+{% block title %}Abfallkalender{% endblock %}
+
 {% block content %}
+<h1>Abfallkalender – Woche</h1>
 
-<div class="abfall-container card">
-    <h2>🗑️ Abfallkalender Drensteinfurt</h2>
-
-    {% if (modules|default({})).get('abfall') %}
-    <a class="tile" href="/abfall_monat">🗓️ Abfall Monatsübersicht</a>
-    {% endif %}
-
-    <ul class="abfall-list">
-        {% for e in events %}
-        <li class="abfall-item {{ e.css }}">
-            <h3>{{ e.icon }} {{ e.name }}</h3>
-            <p>📅 {{ e.begin }} ({{ e.weekday }})</p>
-        </li>
-        {% endfor %}
-    </ul>
+<div class="grid">
+    {% for event in events %}
+    <div class="card">
+        <h3>{{ event.weekday }}</h3>
+        <p>{{ event.icon }} {{ event.name }}</p>
+        <p>{{ event.begin }}</p>
+    </div>
+    {% endfor %}
 </div>
-
 {% endblock %}

@@ -1,73 +1,62 @@
 {% extends "base.html" %}
+{% block title %}Admin – HomeDashboard{% endblock %}
+
 {% block content %}
+<h1>Adminbereich</h1>
 
-<div class="admin-container card">
-    <h2>Admin Dashboard</h2>
+<div class="card" style="margin-bottom: 20px;">
+    <h3>Neuen Benutzer anlegen</h3>
+    <form method="POST" action="/admin/add_user">
+        <label>Name</label>
+        <input name="name">
 
-    <div class="admin-actions">
-        <h3>Neuen Nutzer hinzufügen</h3>
-        <form method="POST" action="/admin/add_user" class="admin-form">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="pin" placeholder="PIN" required>
-            <input type="text" name="calendar_id" placeholder="Kalender-ID">
-            <input type="email" name="email" placeholder="E-Mail">
-            <select name="role">
-                <option value="user">Nutzer</option>
-                <option value="admin">Admin</option>
-            </select>
-            <button type="submit">Nutzer hinzufügen</button>
-        </form>
-    </div>
+        <label>PIN</label>
+        <input name="pin">
 
-    <h3>Bestehende Nutzer</h3>
-    <table class="user-table">
-        <tr>
-            <th>PIN</th>
-            <th>Name</th>
-            <th>E-Mail</th>
-            <th>Rolle</th>
-            <th>Status</th>
-            <th>Aktionen</th>
-        </tr>
+        <label>Kalender-ID</label>
+        <input name="calendar_id">
 
-        {% for pin, user in users.items() %}
-        <tr>
-            <td>{{ pin }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
-            <td>
-                {% if user.blocked %}
-                    <span class="blocked">Gesperrt</span>
-                {% else %}
-                    <span class="active">Aktiv</span>
-                {% endif %}
-            </td>
-            <td class="actions">
-                <form method="POST" action="/admin/delete_user/{{ pin }}">
-                    <button class="delete">Löschen</button>
-                </form>
+        <label>Rolle</label>
+        <select name="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+        </select>
 
-                {% if user.blocked %}
-                <form method="POST" action="/admin/unblock_user/{{ pin }}">
-                    <button class="unblock">Entsperren</button>
-                </form>
-                {% else %}
-                <form method="POST" action="/admin/block_user/{{ pin }}">
-                    <button class="block">Sperren</button>
-                </form>
-                {% endif %}
+        <label>Email</label>
+        <input name="email">
 
-                <a class="edit" href="/admin/edit_user/{{ pin }}">Bearbeiten</a>
-
-                <form method="POST" action="/admin/reset_modules/{{ pin }}">
-                    <button class="block">Module zurücksetzen</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
+        <button type="submit">Benutzer hinzufügen</button>
+    </form>
 </div>
 
+<h2>Benutzerliste</h2>
+
+<div class="grid">
+    {% for pin, user in users.items() %}
+    <div class="card">
+        <h3>{{ user.name }}</h3>
+        <p>PIN: {{ pin }}</p>
+        <p>Rolle: {{ user.role }}</p>
+        <p>Email: {{ user.email }}</p>
+
+        <form method="POST" action="/admin/delete_user/{{ pin }}">
+            <button style="background:#ef4444;">Löschen</button>
+        </form>
+
+        {% if user.blocked %}
+        <form method="POST" action="/admin/unblock_user/{{ pin }}">
+            <button style="background:#38bdf8;">Entsperren</button>
+        </form>
+        {% else %}
+        <form method="POST" action="/admin/block_user/{{ pin }}">
+            <button style="background:#f59e0b;">Sperren</button>
+        </form>
+        {% endif %}
+
+        <a href="/admin/edit_user/{{ pin }}">
+            <button style="margin-top:10px;">Bearbeiten</button>
+        </a>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

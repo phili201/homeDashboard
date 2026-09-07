@@ -1,44 +1,20 @@
 {% extends "base.html" %}
+{% block title %}Setup – Module auswählen{% endblock %}
+
 {% block content %}
+<h1>Module auswählen</h1>
 
-<div class="setup-container">
-    <h2>Willkommen, {{ user.name }}</h2>
-    <p class="setup-info">Bitte wähle die Module aus, die du verwenden möchtest.</p>
+<div class="card" style="max-width: 450px; margin: auto;">
+    <form method="POST">
 
-    <form method="POST" class="setup-form">
+        <label><input type="checkbox" name="calendar"> Kalender</label><br>
+        <label><input type="checkbox" name="recipes"> Rezepte</label><br>
+        <label><input type="checkbox" name="pv"> PV‑Anlage</label><br>
+        <label><input type="checkbox" name="alexa"> Alexa</label><br>
+        <label><input type="checkbox" name="abfall"> Abfallkalender</label><br>
+        <label><input type="checkbox" name="weather"> Wetter</label><br>
 
-        <label class="module-option">
-            <input type="checkbox" name="calendar">
-            <span class="module-box">📅 Google Kalender</span>
-        </label>
-
-        <label class="module-option">
-            <input type="checkbox" name="recipes">
-            <span class="module-box">🍽️ Rezepte</span>
-        </label>
-
-        <label class="module-option">
-            <input type="checkbox" name="pv">
-            <span class="module-box">☀️ PV‑Anlage</span>
-        </label>
-
-        <label class="module-option">
-            <input type="checkbox" name="alexa">
-            <span class="module-box">🎤 Alexa Sprachsteuerung</span>
-        </label>
-
-        <label class="module-option">
-            <input type="checkbox" name="abfall">
-            <span class="module-box">🗑️ Abfallkalender</span>
-        </label>
-
-        <label class="module-option">
-            <input type="checkbox" name="weather">
-            <span class="module-box">🌦️ Wetter</span>
-        </label>
-
-        <button type="submit" class="setup-button">Module speichern</button>
+        <button type="submit">Speichern</button>
     </form>
 </div>
-
 {% endblock %}

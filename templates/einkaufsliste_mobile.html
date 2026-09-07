@@ -1,29 +1,25 @@
 {% extends "base.html" %}
+{% block title %}Einkaufsliste{% endblock %}
+
 {% block content %}
+<h1>Einkaufsliste</h1>
 
-<div class="card">
-    <h2>🛒 Einkaufsliste</h2>
+<div class="grid">
+    {% for item in items %}
+    <div class="card">
+        <h3>{{ item.name }}</h3>
+        <p>Status: {{ item.status }}</p>
 
-    <form method="POST" action="/einkaufsliste/add">
-        <input type="text" name="item" placeholder="Neuer Eintrag" class="mobile-input">
-        <button class="mobile-button">➕</button>
-    </form>
+        <form method="POST" action="/api/shopping/toggle">
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <button>Toggle</button>
+        </form>
 
-    <ul class="mobile-list">
-        {% for item in lst %}
-        <li class="mobile-item">
-            <form method="POST" action="/einkaufsliste/toggle/{{ loop.index0 }}">
-                <button class="check">{{ "✔" if item.done else "○" }}</button>
-            </form>
-
-            <span class="{{ 'done' if item.done else '' }}">{{ item.name }}</span>
-
-            <form method="POST" action="/einkaufsliste/delete/{{ loop.index0 }}">
-                <button class="delete">🗑️</button>
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
+        <form method="POST" action="/api/shopping/delete">
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <button style="background:#ef4444;">Löschen</button>
+        </form>
+    </div>
+    {% endfor %}
 </div>
-
 {% endblock %}

@@ -1,36 +1,26 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Smart‑Home Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/dashboard.css" media="screen">
+    <meta charset="UTF-8">
+    <title>{% block title %}HomeDashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <a class="brand" href="/">Smart‑Home</a>
-            <nav class="nav">
-                {% if session.user %}
-                    <span class="user">{{ session.user }}</span>
-                    <a class="nav-link" href="/dashboard">Dashboard</a>
-                    <a class="nav-link" href="/logout">Logout</a>
-                {% else %}
-                    <a class="nav-link" href="/login">Login</a>
-                {% endif %}
+    <div class="page">
+
+        <header class="topbar">
+            <div class="logo">HomeDashboard</div>
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/admin">Admin</a>
+                <a href="/logout">Logout</a>
             </nav>
-        </div>
-    </header>
+        </header>
 
-    <main class="app-container">
-        <div class="header-inner">
+        <main class="content">
             {% block content %}{% endblock %}
-        </div>
-    </main>
+        </main>
 
-    <footer class="site-footer">
-        <div class="footer-inner">© Dein Home Dashboard</div>
-    </footer>
+    </div>
 </body>
 </html>

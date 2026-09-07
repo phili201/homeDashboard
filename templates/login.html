@@ -1,19 +1,21 @@
 {% extends "base.html" %}
-{% block content %}
 
-<div class="centered">
+{% block title %}Login – HomeDashboard{% endblock %}
+
+{% block content %}
+<div style="max-width: 380px; margin: 60px auto;">
     <div class="card">
-        <h2>Dashboard Login</h2>
+        <h2>Login</h2>
 
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
 
         <form method="POST">
+            <label>PIN</label>
             <input type="password" name="pin" placeholder="PIN eingeben">
-            <button type="submit">Login</button>
+            <button type="submit">Anmelden</button>
         </form>
     </div>
 </div>
-
 {% endblock %}

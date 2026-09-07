@@ -1,18 +1,17 @@
 {% extends "base.html" %}
+{% block title %}Suchergebnisse{% endblock %}
+
 {% block content %}
+<h1>Rezepte</h1>
 
-<div class="card">
-    <h2>Ergebnisse</h2>
-
-    <div class="recipe-list">
-        {% for r in results %}
-        <a class="recipe-item" href="/rezepte/view_api/{{ r.id }}">
-            <img src="{{ r.image }}" class="recipe-img">
-            <h3>{{ r.title }}</h3>
-            <p>{{ r.readyInMinutes }} min • {{ r.servings }} Portionen</p>
+<div class="grid">
+    {% for r in results %}
+    <div class="card">
+        <h3>{{ r.title }}</h3>
+        <a href="/rezepte/view_api/{{ r.id }}">
+            <button>Öffnen</button>
         </a>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
-
 {% endblock %}
