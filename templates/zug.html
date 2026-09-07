@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>🚆 Gefilterte Züge</h2>
+
+    <table>
+    <tr>
+        <th>Zug</th>
+        <th>Von</th>
+        <th>Nach</th>
+        <th>Plan</th>
+        <th>Echt</th>
+        <th>Versp.</th>
+        <th>Gleis</th>
+    </tr>
+
+    {% for t in trains %}
+    <tr style="background-color: {{ t.color or 'white' }};">
+        <td>{{ t.line.name }}</td>
+        <td>{{ t.stop.name }}</td>
+        <td>{{ t.direction }}</td>
+        <td>{{ t.plannedWhen[11:16] if t.plannedWhen else '-' }}</td>
+        <td>{{ t.when[11:16] if t.when else '-' }}</td>
+        <td>{% if t.delay is not none %}{{ (t.delay // 60) }} min{% else %}-{% endif %}</td>
+        <td>{{ t.platform or '-' }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

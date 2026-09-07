@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🗓️ Abfallkalender – {{ month }} / {{ year }}</h2>
+
+<div class="card">
+<div class="month-grid">
+    <div class="week-header">Mo</div>
+    <div class="week-header">Di</div>
+    <div class="week-header">Mi</div>
+    <div class="week-header">Do</div>
+    <div class="week-header">Fr</div>
+    <div class="week-header">Sa</div>
+    <div class="week-header">So</div>
+
+    {% for week in month_view %}
+        {% for day in week %}
+            <div class="day-cell {% if day.event %}{{ day.css }}{% endif %}">
+                <span class="day-number">{{ day.date.day }}</span>
+
+                {% if day.event %}
+                    <span class="event-icon">{{ day.icon }}</span>
+                    <span class="event-name">{{ day.event.name }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+{% endblock %}

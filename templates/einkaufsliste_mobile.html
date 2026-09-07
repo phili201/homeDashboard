@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>🛒 Einkaufsliste</h2>
+
+    <form method="POST" action="/einkaufsliste/add">
+        <input type="text" name="item" placeholder="Neuer Eintrag" class="mobile-input">
+        <button class="mobile-button">➕</button>
+    </form>
+
+    <ul class="mobile-list">
+        {% for item in lst %}
+        <li class="mobile-item">
+            <form method="POST" action="/einkaufsliste/toggle/{{ loop.index0 }}">
+                <button class="check">{{ "✔" if item.done else "○" }}</button>
+            </form>
+
+            <span class="{{ 'done' if item.done else '' }}">{{ item.name }}</span>
+
+            <form method="POST" action="/einkaufsliste/delete/{{ loop.index0 }}">
+                <button class="delete">🗑️</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

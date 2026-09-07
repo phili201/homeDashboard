@@ -1,0 +1,71 @@
+{
+    "1593": {
+        "name": "Philipp",
+        "calendar_id": "none",
+        "role": "admin",
+        "email": "philipp@example.com",
+        "first_login": false,
+        "blocked": false,
+        "modules": {
+            "calendar": true,
+            "recipes": true,
+            "pv": true,
+            "alexa": false,
+            "abfall": true,
+            "weather": true
+        },
+        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
+        "shopping_shared": true
+    },
+    "1234": {
+        "name": "Test",
+        "calendar_id": "test",
+        "role": "user",
+        "email": "test@test.de",
+        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
+        "shopping_shared": true,
+        "modules": {
+            "calendar": true,
+            "recipes": false,
+            "pv": false,
+            "alexa": false,
+            "abfall": false,
+            "weather": true
+        },
+        "first_login": false
+    },
+    "9999": {
+        "name": "autoTest2",
+        "calendar_id": "",
+        "role": "user",
+        "email": "a@b.c",
+        "first_login": true,
+        "blocked": false,
+        "modules": {
+            "calendar": false,
+            "recipes": false,
+            "pv": false,
+            "alexa": false
+        },
+        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
+        "shopping_shared": true
+    },
+    "12345": {
+        "name": "tt",
+        "calendar_id": "tt",
+        "role": "user",
+        "email": "tt@tt.de",
+        "first_login": false,
+        "blocked": false,
+        "modules": {
+            "calendar": true,
+            "recipes": true,
+            "pv": true,
+            "alexa": true,
+            "abfall": true,
+            "weather": true
+        },
+        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
+        "shopping_shared": true
+    }
+}

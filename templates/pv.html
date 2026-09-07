@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>☀️ PV‑Anlage</h2>
+
+    <div class="widget">
+        <h3>Leistung</h3>
+        <p>{{ pv.power }} W</p>
+        <p>Status: {{ pv.status }}</p>
+        <p>Radiation: {{ pv.radiation }}</p>
+    </div>
+
+    <a class="btn" href="/dashboard">Zurück zum Dashboard</a>
+</div>
+
+{% endblock %}
+ 

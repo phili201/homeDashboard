@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container card">
+    <h2>Admin Dashboard</h2>
+
+    <div class="admin-actions">
+        <h3>Neuen Nutzer hinzufügen</h3>
+        <form method="POST" action="/admin/add_user" class="admin-form">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="text" name="pin" placeholder="PIN" required>
+            <input type="text" name="calendar_id" placeholder="Kalender-ID">
+            <input type="email" name="email" placeholder="E-Mail">
+            <select name="role">
+                <option value="user">Nutzer</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button type="submit">Nutzer hinzufügen</button>
+        </form>
+    </div>
+
+    <h3>Bestehende Nutzer</h3>
+    <table class="user-table">
+        <tr>
+            <th>PIN</th>
+            <th>Name</th>
+            <th>E-Mail</th>
+            <th>Rolle</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+        </tr>
+
+        {% for pin, user in users.items() %}
+        <tr>
+            <td>{{ pin }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+                {% if user.blocked %}
+                    <span class="blocked">Gesperrt</span>
+                {% else %}
+                    <span class="active">Aktiv</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <form method="POST" action="/admin/delete_user/{{ pin }}">
+                    <button class="delete">Löschen</button>
+                </form>
+
+                {% if user.blocked %}
+                <form method="POST" action="/admin/unblock_user/{{ pin }}">
+                    <button class="unblock">Entsperren</button>
+                </form>
+                {% else %}
+                <form method="POST" action="/admin/block_user/{{ pin }}">
+                    <button class="block">Sperren</button>
+                </form>
+                {% endif %}
+
+                <a class="edit" href="/admin/edit_user/{{ pin }}">Bearbeiten</a>
+
+                <form method="POST" action="/admin/reset_modules/{{ pin }}">
+                    <button class="block">Module zurücksetzen</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+{% endblock %}

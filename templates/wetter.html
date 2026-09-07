@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🌦️ Wetter in Drensteinfurt</h2>
+
+<div class="weather-box">
+    <div class="weather-icon">{{ icon }}</div>
+    <div class="weather-temp">{{ w.temp }}°C</div>
+    <div class="weather-info">
+        <p>Wind: {{ w.wind }} km/h</p>
+        <p>Code: {{ w.code }}</p>
+    </div>
+</div>
+
+{% endblock %}

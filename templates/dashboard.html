@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-grid">
+
+    {% if (modules|default({})).get('weather') %}
+    <div class="widget">
+        <h3>Wetter</h3>
+        <p>{{ weather.temp }}°C</p>
+        <p>{{ weather_icon }}</p>
+    </div>
+    {% endif %}
+
+    {% if (modules|default({})).get('abfall') %}
+    <div class="widget">
+        <h3>Abfallkalender</h3>
+        <a href="/abfall">Öffnen</a>
+    </div>
+    {% endif %}
+
+    {% if (modules|default({})).get('pv') %}
+    <div class="widget">
+        <h3>PV‑Anlage</h3>
+        <p>{{ pv.power }} W</p>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

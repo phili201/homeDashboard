@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="setup-container">
+    <h2>Willkommen, {{ user.name }}</h2>
+    <p class="setup-info">Bitte wähle die Module aus, die du verwenden möchtest.</p>
+
+    <form method="POST" class="setup-form">
+
+        <label class="module-option">
+            <input type="checkbox" name="calendar">
+            <span class="module-box">📅 Google Kalender</span>
+        </label>
+
+        <label class="module-option">
+            <input type="checkbox" name="recipes">
+            <span class="module-box">🍽️ Rezepte</span>
+        </label>
+
+        <label class="module-option">
+            <input type="checkbox" name="pv">
+            <span class="module-box">☀️ PV‑Anlage</span>
+        </label>
+
+        <label class="module-option">
+            <input type="checkbox" name="alexa">
+            <span class="module-box">🎤 Alexa Sprachsteuerung</span>
+        </label>
+
+        <label class="module-option">
+            <input type="checkbox" name="abfall">
+            <span class="module-box">🗑️ Abfallkalender</span>
+        </label>
+
+        <label class="module-option">
+            <input type="checkbox" name="weather">
+            <span class="module-box">🌦️ Wetter</span>
+        </label>
+
+        <button type="submit" class="setup-button">Module speichern</button>
+    </form>
+</div>
+
+{% endblock %}
