@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="calendar-frame-container">
-    <iframe 
-        src="https://calendar.google.com/calendar/u/0/r"
-        class="calendar-frame"
-        allowfullscreen>
-    </iframe>
+<h1>Termine</h1>
+
+<div id="events">
+  {% for e in events %}
+    <div class="event-box">
+      <strong>{{ e.name }}</strong><br>
+      {{ e.start }}
+    </div>
+  {% endfor %}
 </div>
 
 {% endblock %}

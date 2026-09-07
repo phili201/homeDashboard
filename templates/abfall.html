@@ -1,16 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Abfallkalender{% endblock %}
+{% block title %}Abfall – Woche{% endblock %}
 
 {% block content %}
-<h1>Abfallkalender – Woche</h1>
+<h1>Abfall – Woche</h1>
 
 <div class="grid">
     {% for event in events %}
     <div class="card">
-        <h3>{{ event.weekday }}</h3>
+        <h3>{{ event.begin }}</h3>
         <p>{{ event.icon }} {{ event.name }}</p>
-        <p>{{ event.begin }}</p>
     </div>
     {% endfor %}
 </div>
+
+<hr>
+
+<h2>Legende</h2>
+<ul class="legend">
+    <li>🟨 GT – Gelbe Tonne</li>
+    <li>🟦 PT – Papiertonne</li>
+    <li>🟩 BIO – Biomüll</li>
+    <li>🟫 RM – Restmüll</li>
+    <li>🟥 S – Schadstoffmobil</li>
+</ul>
+
 {% endblock %}

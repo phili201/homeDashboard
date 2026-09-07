@@ -1,14 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Rezepte suchen{% endblock %}
 
 {% block content %}
-<h1>Rezepte suchen</h1>
 
-<div class="card" style="max-width: 400px; margin: auto;">
-    <form method="POST">
-        <label>Suchbegriff</label>
-        <input name="query">
-        <button type="submit">Suchen</button>
-    </form>
+<h1>Rezepte</h1>
+
+<form action="/rezepte/search" method="get" class="card" style="max-width: 400px; margin-bottom: 20px;">
+    <label>Suchbegriff</label>
+    <input type="text" name="q" value="{{ query }}" placeholder="z.B. Nudeln, Pizza, Salat">
+    <button type="submit">Suchen</button>
+</form>
+
+<h2>Ergebnisse für: {{ query }}</h2>
+
+<div class="grid">
+    {% for r in recipes %}
+    <div class="card">
+        <h3><a href="/rezepte/{{ r.id }}">{{ r.title }}</a></h3>
+        <p>⏱ {{ r.readyInMinutes }} min</p>
+        <p>🍽 {{ r.servings }} Portionen</p>
+        {% if r.image %}
+            <img src="{{ r.image }}" width="200">
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
+
 {% endblock %}

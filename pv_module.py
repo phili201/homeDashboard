@@ -1,44 +1,33 @@
+# pv_module.py
 import requests
+from datetime import datetime
 
 def get_pv_data():
-    lat = 51.801
-    lon = 7.738
+    url = "https://api.open-meteo.com/v1/forecast?latitude=51.801&longitude=7.738&hourly=shortwave_radiation"
 
-    url = (
-        f"https://api.open-meteo.com/v1/solar?"
-        f"latitude={lat}&longitude={lon}&hourly=solar_radiation"
-    )
-
-    data = {}
     try:
         r = requests.get(url, timeout=5)
-        if r.status_code == 200:
-            try:
-                data = r.json()
-            except Exception:
-                data = {}
-    except Exception:
-        data = {}
-
-    # Defensive parsing: API may return unexpected payload
-    radiation = 0
-    try:
-        hourly = data.get("hourly", {})
-        radiation_list = hourly.get("solar_radiation") if isinstance(hourly, dict) else None
-        if radiation_list and isinstance(radiation_list, (list, tuple)) and len(radiation_list) > 0:
+        data = r.json()
+        radiation_list = data.get("hourly", {}).get("shortwave_radiation", [])
+        if radiation_list:
             radiation = radiation_list[0]
-    except Exception:
-        radiation = 0
+        else:
+            # Fallback: einfache Tageskurve
+            hour = datetime.now().hour
+            if 8 <= hour <= 18:
+                radiation = 200
+            else:
+                radiation = 0
+    except:
+        # Fallback bei API-Fehler
+        hour = datetime.now().hour
+        radiation = 200 if 8 <= hour <= 18 else 0
 
-    try:
-        power = int(radiation * 1.25)
-    except Exception:
-        power = 0
-
+    power = int(radiation * 1.25)
     status = "Produktion" if power > 10 else "Nacht" if power == 0 else "Standby"
 
     return {
         "power": power,
-        "status": status,
-        "radiation": radiation
+        "radiation": radiation,
+        "status": status
     }

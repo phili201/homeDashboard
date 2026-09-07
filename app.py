@@ -1,5 +1,12 @@
 from flask import Flask, render_template, request, redirect, session
 import json
+from datetime import datetime, timedelta
+from pv_module import get_pv_data
+from calendar_module import get_calendar_service
+from abfall_module import load_abfall_events, build_month_view
+from rezepte_api import search_recipes, get_recipe_details, fallback_recipes
+from ics import Calendar
+import requests
 # calendar_module uses google auth libs; import lazily where needed
 # abfall_module has external dependency 'ics'; import lazily in routes
 
@@ -13,6 +20,33 @@ with open('users.json', 'r') as f:
 def save_users():
     with open("users.json", "w") as f:
         json.dump(users, f, indent=4)
+
+def load_users():
+    with open("users.json", "r") as f:
+        return json.load(f)
+
+
+def get_events_for_user(username):
+    users = load_users()
+    ics_url = users[username]["ics_url"]
+
+    r = requests.get(ics_url)
+    c = Calendar(r.text)
+
+    events = []
+    for event in c.events:
+        events.append({
+            "name": event.name,
+            "start": event.begin.datetime.isoformat(),
+            "end": event.end.datetime.isoformat()
+        })
+    return events
+
+
+
+@app.route("/api/events/<username>")
+def api_events(username):
+    return get_events_for_user(username)
 
 
 @app.context_processor
@@ -65,7 +99,8 @@ def dashboard():
         "pv": False,
         "alexa": False,
         "abfall": False,
-        "weather": False
+        "weather": False,
+        "pin": pin
     })
 
     from wetter_module import get_weather_widget, weather_icon
@@ -83,7 +118,8 @@ def dashboard():
         weather=w,
         weather_icon=icon,
         radar=radar,
-        pv=pv
+        pv=pv,
+        pin=pin
     )
 
 
@@ -110,6 +146,7 @@ def add_user():
     calendar_id = request.form["calendar_id"]
     role = request.form["role"]
     email = request.form["email"]
+    ics_url = request.form["ics_url"]
 
     users[pin] = {
         "name": name,
@@ -126,8 +163,9 @@ def add_user():
             "abfall": False,
             "weather": False
         },
-        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
-        "shopping_shared": True
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
+        "shopping_shared": True,
+        "ics_url": ics_url
     }
 
     save_users()
@@ -272,68 +310,56 @@ def calendar_ui():
     if "user" not in session:
         return redirect("/login")
 
-    return render_template("calendar_ui.html")
+    username = session["pin"]
+    events = get_events_for_user(username)
+
+    return render_template("calendar_ui.html", events=events)
+
+
+
 
 @app.route("/abfall")
 def abfall():
-    if "user" not in session:
-        return redirect("/login")
-    ics_url = users[session["pin"]].get("abfall_ics", "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457")
-
-    try:
-        from abfall_module import load_abfall_events
-        events = load_abfall_events(ics_url)
-    except Exception:
-        events = []
-
-    modules = users[session["pin"]].get("modules", {})
-
-    return render_template("abfall.html", events=events, modules=modules)
-
-from datetime import datetime
-# abfall_module depends on 'ics' package; import lazily inside the routes that need it
+    events = load_abfall_events()
+    return render_template("abfall.html", events=events)
 
 @app.route("/abfall_monat")
 def abfall_monat():
     if "user" not in session:
         return redirect("/login")
 
-    pin = session["pin"]
-    ics_url = users[pin].get("abfall_ics", "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457")
-
-    try:
-        from abfall_module import load_abfall_events, build_month_view
-        events = load_abfall_events(ics_url)
-    except Exception:
-        events = []
+    # Lokale JSON laden – KEINE ICS-URL mehr
+    events = load_abfall_events()
 
     now = datetime.now()
     year = now.year
     month = now.month
 
-    try:
-        month_view = build_month_view(events, year, month)
-    except Exception:
-        month_view = []
+    # Monatsansicht erzeugen
+    month_view = build_month_view(events, year, month)
 
-    modules = users[pin].get("modules", {})
+    modules = users[session["pin"]].get("modules", {})
 
-    return render_template("abfall_monat.html", month_view=month_view, year=year, month=month, modules=modules)
+    return render_template(
+        "abfall_monat.html",
+        month_view=month_view,
+        year=year,
+        month=month,
+        modules=modules
+    )
 
-@app.route("/rezepte/search", methods=["GET", "POST"])
+@app.route("/rezepte/search")
 def rezepte_search():
-    if "user" not in session:
-        return redirect("/login")
+    query = request.args.get("q", "")
+    recipes = search_recipes(query)
+    return render_template("rezepte_search.html", recipes=recipes, query=query)
 
-    if request.method == "GET":
-        return render_template("rezepte_search.html")
+@app.route("/rezepte/<int:recipe_id>/cook")
+def rezepte_cook(recipe_id):
+    recipe = get_recipe_details(recipe_id)
+    return render_template("rezepte_cook.html", recipe=recipe)
 
-    query = request.form["query"]
 
-    from rezepte_api import search_recipes
-    results = search_recipes(query)
-
-    return render_template("rezepte_results.html", results=results)
 
 @app.route("/rezepte/view_api/<rid>")
 def rezepte_view_api(rid):
@@ -341,6 +367,11 @@ def rezepte_view_api(rid):
     recipe = get_recipe_details(rid)
 
     return render_template("rezepte_view_api.html", recipe=recipe, rid=rid)
+
+@app.route("/rezepte/<int:recipe_id>")
+def rezepte_detail(recipe_id):
+    recipe = get_recipe_details(recipe_id)
+    return render_template("rezepte_detail.html", recipe=recipe)
 
 @app.route("/einkaufsliste/add_from_api/<rid>")
 def einkaufsliste_add_from_api(rid):

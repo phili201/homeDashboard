@@ -1,0 +1,46 @@
+{
+  "termine": [
+    { "datum": "2026-07-01", "bezeichnung": "GT" },
+    { "datum": "2026-07-03", "bezeichnung": "BIO" },
+    { "datum": "2026-07-10", "bezeichnung": "RM" },
+    { "datum": "2026-07-15", "bezeichnung": "PT" },
+    { "datum": "2026-07-17", "bezeichnung": "BIO" },
+    { "datum": "2026-07-24", "bezeichnung": "RM" },
+    { "datum": "2026-07-29", "bezeichnung": "GT" },
+
+    { "datum": "2026-08-07", "bezeichnung": "BIO" },
+    { "datum": "2026-08-14", "bezeichnung": "RM" },
+    { "datum": "2026-08-19", "bezeichnung": "PT" },
+    { "datum": "2026-08-21", "bezeichnung": "BIO" },
+    { "datum": "2026-08-28", "bezeichnung": "RM" },
+
+    { "datum": "2026-09-02", "bezeichnung": "GT" },
+    { "datum": "2026-09-04", "bezeichnung": "BIO" },
+    { "datum": "2026-09-11", "bezeichnung": "RM" },
+    { "datum": "2026-09-16", "bezeichnung": "PT" },
+    { "datum": "2026-09-18", "bezeichnung": "BIO" },
+    { "datum": "2026-09-25", "bezeichnung": "RM" },
+
+    { "datum": "2026-10-02", "bezeichnung": "BIO" },
+    { "datum": "2026-10-07", "bezeichnung": "GT" },
+    { "datum": "2026-10-09", "bezeichnung": "RM" },
+    { "datum": "2026-10-14", "bezeichnung": "PT" },
+    { "datum": "2026-10-16", "bezeichnung": "BIO" },
+    { "datum": "2026-10-23", "bezeichnung": "RM" },
+    { "datum": "2026-10-30", "bezeichnung": "BIO" },
+
+    { "datum": "2026-11-04", "bezeichnung": "GT" },
+    { "datum": "2026-11-06", "bezeichnung": "BIO" },
+    { "datum": "2026-11-13", "bezeichnung": "RM" },
+    { "datum": "2026-11-18", "bezeichnung": "PT" },
+    { "datum": "2026-11-20", "bezeichnung": "BIO" },
+    { "datum": "2026-11-27", "bezeichnung": "RM" },
+
+    { "datum": "2026-12-02", "bezeichnung": "GT" },
+    { "datum": "2026-12-04", "bezeichnung": "BIO" },
+    { "datum": "2026-12-11", "bezeichnung": "RM" },
+    { "datum": "2026-12-16", "bezeichnung": "PT" },
+    { "datum": "2026-12-18", "bezeichnung": "BIO" },
+    { "datum": "2026-12-27", "bezeichnung": "RM" }
+  ]
+}

@@ -4,14 +4,22 @@
 {% block content %}
 <h1>Rezepte</h1>
 
+{% if results and results|length > 0 %}
 <div class="grid">
     {% for r in results %}
     <div class="card">
-        <h3>{{ r.title }}</h3>
+        <h3><a href="/rezepte/{{ r.id }}">{{ r.title }}</a></h3>
+        <p>⏱ {{ r.readyInMinutes }} Min · 🍽 {{ r.servings }} Portionen</p>
         <a href="/rezepte/view_api/{{ r.id }}">
             <button>Öffnen</button>
         </a>
     </div>
     {% endfor %}
 </div>
+{% else %}
+<div class="card" style="max-width: 400px; margin: auto;">
+    <h3>Keine Rezepte gefunden</h3>
+    <p>Versuch es mit einem anderen Suchbegriff.</p>
+</div>
+{% endif %}
 {% endblock %}

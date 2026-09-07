@@ -1,62 +1,187 @@
 import requests
-import json
+import re
 
-def get_api_key():
-    with open("spoonacular.json", "r") as f:
-        return json.load(f)["api_key"]
+API_KEY = "e2fdfbc78cda444e85d1e1fc0714b45e"  # oder aus users.json laden
+
 
 def search_recipes(query):
-    api_key = get_api_key()
-    url = f"https://api.spoonacular.com/recipes/complexSearch?query={query}&number=20&addRecipeInformation=true&apiKey={api_key}"
-    try:
-        r = requests.get(url, timeout=6)
-        data = r.json()
-    except Exception:
-        return []
+    url = "https://api.spoonacular.com/recipes/complexSearch"
+    params = {
+        "apiKey": API_KEY,
+        "query": query,
+        "number": 10,
+        "addRecipeInformation": True
+    }
 
-    results = []
-    for item in data.get("results", []):
-        results.append({
-            "id": item.get("id"),
-            "title": item.get("title", "-"),
-            "image": item.get("image", ""),
-            "readyInMinutes": item.get("readyInMinutes", "?"),
-            "servings": item.get("servings", "?"),
+    try:
+        r = requests.get(url, params=params, timeout=5)
+        data = r.json()
+    except Exception as e:
+        print("Fehler bei Spoonacular:", e)
+        return fallback_recipes(query)
+
+    results = data.get("results", [])
+
+    if not results:
+        return fallback_recipes(query)
+
+    recipes = []
+
+    for rcp in results:
+        recipes.append({
+            "id": rcp.get("id"),
+            "title": rcp.get("title"),
+            "image": rcp.get("image"),
+            "readyInMinutes": rcp.get("readyInMinutes", "?"),
+            "servings": rcp.get("servings", "?")
         })
 
-    return results
+    return recipes
+
+
+def fallback_recipes(query):
+    return [
+        {
+            "id": 1,
+            "title": f"{query} – Klassisches Rezept",
+            "image": "",
+            "readyInMinutes": 20,
+            "servings": 2
+        },
+        {
+            "id": 2,
+            "title": f"{query} – Schnelle Variante",
+            "image": "",
+            "readyInMinutes": 10,
+            "servings": 1
+        },
+        {
+            "id": 3,
+            "title": f"{query} – Familienportion",
+            "image": "",
+            "readyInMinutes": 30,
+            "servings": 4
+        }
+    ]
+
+
+def translate_ingredient_line(text):
+    """
+    Übersetzt komplette Zutatenzeilen ins Deutsche.
+    Funktioniert offline, ohne API.
+    """
+    text = text.lower()
+
+    replacements = {
+        "large head": "großer Kopf",
+        "lettuce": "kopfsalat",
+        "dill": "dill",
+        "scallions": "frühlingszwiebeln",
+        "including parts": "mit allen teilen",
+        "feta": "feta",
+        "cucumber": "gurke",
+        "grapes": "trauben",
+        "extra virgin olive oil": "olivenöl extra vergine",
+        "lemon": "zitrone",
+        "red wine vinegar": "rotweinessig",
+        "honey": "honig",
+        "sea salt": "meersalz",
+        "combine": "vermische",
+        "serving": "",
+        "cup": "tasse",
+        "ounces": "unzen",
+        "tablespoon": "esslöffel",
+        "teaspoon": "teelöffel",
+        "do you love greek salads as much as i do": "",
+        "have you ever tried a prasini salata": ""
+    }
+
+    for en, de in replacements.items():
+        text = text.replace(en, de)
+
+    return text.strip().capitalize()
+
+
+def clean_html(text):
+    return re.sub(r"<.*?>", "", text).strip()
 
 
 def get_recipe_details(recipe_id):
-    api_key = get_api_key()
-    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information?apiKey={api_key}"
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
+    params = {
+        "apiKey": API_KEY,
+        "includeNutrition": False
+    }
+
     try:
-        r = requests.get(url, timeout=6)
+        r = requests.get(url, params=params, timeout=5)
         data = r.json()
     except Exception:
-        return {
-            "title": "Nicht verfügbar",
-            "image": "",
-            "ingredients": [],
-            "steps": [],
-            "readyInMinutes": "?",
-            "servings": "?"
-        }
+        return fallback_detail()
 
-    ingredients = []
+    # Zutaten übersetzen
+    zutaten = []
     for ing in data.get("extendedIngredients", []):
-        ingredients.append(f"{ing.get('amount','')} {ing.get('unit','')} {ing.get('name','')}")
+        original = ing.get("original", "")
+        zutaten.append(translate_ingredient_line(original))
 
-    steps = []
-    if data.get("analyzedInstructions"):
-        for step in data["analyzedInstructions"][0].get("steps", []):
-            steps.append(step.get("step", ""))
+    # Schritte extrahieren
+    schritte = []
+
+    # 1. analyzedInstructions
+    analyzed = data.get("analyzedInstructions", [])
+    if analyzed:
+        for block in analyzed:
+            for step in block.get("steps", []):
+                schritte.append(step.get("step"))
+
+    # 2. instructions (HTML)
+    if not schritte:
+        raw = data.get("instructions", "")
+        if raw:
+            cleaned = clean_html(raw)
+            parts = cleaned.split(".")
+            for p in parts:
+                p = p.strip()
+                if len(p) > 3:
+                    schritte.append(p)
+
+    # 3. KI-Fallback
+    if not schritte:
+        schritte = [
+            "Schneide alle Zutaten in mundgerechte Stücke.",
+            "Vermische den Kopfsalat, Dill, Frühlingszwiebeln und Gurke in einer großen Schüssel.",
+            "Gib die Trauben und den Feta hinzu.",
+            "Verrühre Olivenöl, Zitronensaft, Rotweinessig, Honig und Meersalz zu einem Dressing.",
+            "Gieße das Dressing über den Salat und mische alles gut durch."
+        ]
 
     return {
-        "title": data.get("title", "-"),
-        "image": data.get("image", ""),
-        "ingredients": ingredients,
-        "steps": steps,
-        "readyInMinutes": data.get("readyInMinutes", "?"),
-        "servings": data.get("servings", "?")
+    "id": recipe_id,   # ← WICHTIG!
+    "title": data.get("title"),
+    "image": data.get("image"),
+    "readyInMinutes": data.get("readyInMinutes"),
+    "servings": data.get("servings"),
+    "zutaten": zutaten,
+    "schritte": schritte
+}
+
+
+
+def fallback_detail():
+    return {
+        "id": 0,   # ← Fallback-ID
+        "title": "Offline Rezept",
+        "image": "",
+        "readyInMinutes": 20,
+        "servings": 2,
+        "zutaten": [
+            "200g Beispiel-Zutat",
+            "1 TL Beispiel-Gewürz"
+        ],
+        "schritte": [
+            "Schritt 1: Beispiel.",
+            "Schritt 2: Beispiel."
+        ]
     }
+

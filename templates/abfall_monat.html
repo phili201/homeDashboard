@@ -1,22 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Abfall – Monat{% endblock %}
-
 {% block content %}
-<h1>Abfallkalender – {{ month }} / {{ year }}</h1>
 
-<div class="grid">
+<h2>🗑️ Abfallkalender – {{ month }} / {{ year }}</h2>
+
+<table class="month-table">
     {% for week in month_view %}
+    <tr>
         {% for day in week %}
-        <div class="card">
-            <h3>{{ day.date.strftime("%d.%m") }}</h3>
-
-            {% if day.event %}
-                <p>{{ day.event.icon }} {{ day.event.name }}</p>
+        <td class="{{ day.css }}">
+            <div>{{ day.date }}</div>
+            {% if day.name %}
+                <div>{{ day.icon }} {{ day.name }}</div>
             {% else %}
-                <p>Kein Eintrag</p>
+                <div class="no-entry">–</div>
             {% endif %}
-        </div>
+        </td>
         {% endfor %}
+    </tr>
     {% endfor %}
-</div>
+</table>
+
 {% endblock %}

@@ -14,15 +14,17 @@
             "abfall": true,
             "weather": true
         },
-        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
-        "shopping_shared": true
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
+        "shopping_shared": true,
+        "ics_url": ""
     },
     "1234": {
         "name": "Test",
         "calendar_id": "test",
         "role": "user",
         "email": "test@test.de",
-        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
+        "ics_url": "",
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
         "modules": {
             "calendar": true,
@@ -47,8 +49,9 @@
             "pv": false,
             "alexa": false
         },
-        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
-        "shopping_shared": true
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
+        "shopping_shared": true,
+        "ics_url": ""
     },
     "12345": {
         "name": "tt",
@@ -65,7 +68,8 @@
             "abfall": true,
             "weather": true
         },
-        "abfall_ics": "https://www.kreis-warendorf.de/abfallkalender/kalender.ics?oid=10457",
-        "shopping_shared": true
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
+        "shopping_shared": true,
+        "ics_url": ""
     }
 }

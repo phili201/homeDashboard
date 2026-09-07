@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}PV‑Anlage{% endblock %}
-
+{% block title %}PV-Anlage{% endblock %}
 {% block content %}
-<h1>PV‑Anlage</h1>
+<h1>PV-Anlage</h1>
 
 <div class="card" style="max-width: 400px; margin: auto;">
     <h3>Aktuelle Leistung</h3>
     <p>{{ pv.power }} W</p>
+    <p>Status: {{ pv.status }}</p>
+    <p>Strahlung: {{ pv.radiation }} W/m²</p>
 </div>
 {% endblock %}

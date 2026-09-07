@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ recipe.title }} – Kochmodus</h1>
+
+{% if recipe.image %}
+<img src="{{ recipe.image }}" width="300">
+{% endif %}
+
+<h2>Zubereitung</h2>
+
+<div id="step-box" class="card" style="font-size: 22px; padding: 20px;">
+    Schritt <span id="step-number">1</span>:
+    <p id="step-text">{{ recipe.schritte[0] }}</p>
+</div>
+
+<div style="margin-top: 20px;">
+    <button onclick="prevStep()">⬅️ Zurück</button>
+    <button onclick="nextStep()">➡️ Weiter</button>
+</div>
+
+<script>
+    const steps = {{ recipe.schritte|tojson }};
+    let index = 0;
+
+    function updateStep() {
+        document.getElementById("step-number").innerText = index + 1;
+        document.getElementById("step-text").innerText = steps[index];
+    }
+
+    function nextStep() {
+        if (index < steps.length - 1) {
+            index++;
+            updateStep();
+        }
+    }
+
+    function prevStep() {
+        if (index > 0) {
+            index--;
+            updateStep();
+        }
+    }
+</script>
+
+<a href="/rezepte/{{ recipe.id }}">🔙 Zurück zum Rezept</a>
+
+{% endblock %}

@@ -1,21 +1,28 @@
-from ics import Calendar
-import requests
+import json
+from datetime import datetime
 
-def load_abfall_events(ics_url):
-    r = requests.get(ics_url)
-    c = Calendar(r.text)
+def load_abfall_events():
+    try:
+        with open("abfall_data.json", "r") as f:
+            data = json.load(f)
+    except Exception as e:
+        print("Fehler beim Laden der Abfall-JSON:", e)
+        return []
 
     events = []
 
-    for event in c.events:
-        icon, css_class = classify_abfall(event.name)
+    for item in data.get("termine", []):
+        date = item.get("datum")
+        art = item.get("bezeichnung", "")
+
+        icon, css = classify_abfall(art)
 
         events.append({
-            "name": event.name,
-            "begin": event.begin.format("YYYY-MM-DD"),
-            "weekday": event.begin.format("dddd"),
+            "name": art,
+            "begin": date,
+            "weekday": datetime.strptime(date, "%Y-%m-%d").strftime("%A"),
             "icon": icon,
-            "css": css_class
+            "css": css
         })
 
     return events
@@ -24,27 +31,24 @@ def load_abfall_events(ics_url):
 def classify_abfall(name):
     name_lower = name.lower()
 
-    if "rest" in name_lower:
+    if "rm" in name_lower:
         return ("🟫", "rest")
     if "bio" in name_lower:
         return ("🟩", "bio")
-    if "papier" in name_lower or "pappe" in name_lower:
+    if "pt" in name_lower:
         return ("🟦", "papier")
-    if "gelb" in name_lower or "wertstoff" in name_lower:
+    if "gt" in name_lower:
         return ("🟨", "gelb")
-    if "sperr" in name_lower:
+    if "s" in name_lower:
         return ("🟥", "sperr")
 
     return ("⬜", "default")
 
-import calendar
-from datetime import date
-
 def build_month_view(events, year, month):
-    cal = calendar.Calendar(firstweekday=0)  # Montag = 0
+    cal = calendar.Calendar(firstweekday=0)  # Montag
     month_days = cal.monthdatescalendar(year, month)
 
-    # Events nach Datum sortieren
+    # Events nach Datum mappen
     event_map = {}
     for e in events:
         event_map[e["begin"]] = e
@@ -55,22 +59,23 @@ def build_month_view(events, year, month):
         week_row = []
         for day in week:
             day_str = day.strftime("%Y-%m-%d")
+            entry = event_map.get(day_str, None)
 
-            if day_str in event_map:
-                ev = event_map[day_str]
+            if entry:
                 week_row.append({
-                    "date": day,
-                    "event": ev,
-                    "icon": ev["icon"],
-                    "css": ev["css"]
+                    "date": day_str,
+                    "name": entry["name"],
+                    "icon": entry["icon"],
+                    "css": entry["css"]
                 })
             else:
                 week_row.append({
-                    "date": day,
-                    "event": None
+                    "date": day_str,
+                    "name": None,
+                    "icon": None,
+                    "css": "none"
                 })
 
         month_grid.append(week_row)
 
     return month_grid
-

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ recipe.title }}</h1>
+
+{% if recipe.image %}
+<img src="{{ recipe.image }}" width="300">
+{% endif %}
+
+<p>⏱ {{ recipe.readyInMinutes }} Minuten</p>
+<p>🍽 {{ recipe.servings }} Portionen</p>
+
+<h2>Zutaten</h2>
+<ul>
+    {% for z in recipe.zutaten %}
+    <li>{{ z }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Zubereitung</h2>
+<ol>
+    {% for s in recipe.schritte %}
+    <li>{{ s }}</li>
+    {% endfor %}
+</ol>
+
+{% if recipe.id %}
+    <a href="/rezepte/{{ recipe.id }}/cook">🍳 Kochmodus starten</a>
+{% endif %}
+
+
+
+<a href="/rezepte/search?q={{ recipe.title }}">🔙 Zurück zur Suche</a>
+
+{% endblock %}

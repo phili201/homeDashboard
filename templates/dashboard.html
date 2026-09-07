@@ -1,39 +1,78 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>Dein HomeDashboard</h1>
+<h1>HomeDashboard</h1>
 
 <div class="grid">
 
     {% if modules.weather %}
     <div class="card">
         <h3>Wetter</h3>
-        <p>{{ weather.temperature }} °C</p>
+        <p>{{ weather.temp }} °C</p>
         <p>{{ weather_icon }}</p>
+        <a href="/wetter"><button>Details</button></a>
+    </div>
+    {% endif %}
+
+    {% if modules.pv %}
+    <div class="card">
+        <h3>PV-Anlage</h3>
+        <p>{{ pv.power }} W – {{ pv.status }}</p>
+        <a href="/pv"><button>Details</button></a>
     </div>
     {% endif %}
 
     {% if modules.abfall %}
     <div class="card">
         <h3>Abfallkalender</h3>
-        <a href="/abfall">Wochenansicht</a><br>
-        <a href="/abfall_monat">Monatsansicht</a>
+        <a href="/abfall"><button>Öffnen</button></a>
     </div>
     {% endif %}
 
-    {% if modules.pv %}
+    {% if modules.recipes %}
     <div class="card">
-        <h3>PV‑Anlage</h3>
-        <p>{{ pv.power }} W</p>
+        <h3>Rezepte</h3>
+        <a href="/rezepte/search"><button>Suchen</button></a>
+    </div>
+    {% endif %}
+
+    {% if modules.calendar %}
+    <div class="card">
+        <h3>Kalender</h3>
+        <div id="events"></div>
+        <script>
+        fetch("/api/events/{{ pin }}")
+        .then(r => r.json())
+        .then(events => {
+            const div = document.getElementById("events");
+            events.forEach(e => {
+            const box = document.createElement("div");
+            box.className = "event-box";
+            box.innerHTML = `
+                <strong>${e.name}</strong><br>
+                ${new Date(e.start).toLocaleString()}
+            `;
+            div.appendChild(box);
+            });
+        });
+        </script>
+        <a href="/calendar_ui"><button>Details</button></a>
+    </div>
+
+    {% endif %}
+
+    {% if modules.einkaufsliste %}
+    <div class="card">
+        <h3>Einkaufsliste</h3>
+        <a href="/einkaufsliste"><button>Öffnen</button></a>
     </div>
     {% endif %}
 
     {% if modules.zug %}
     <div class="card">
         <h3>Züge</h3>
-        <a href="/zug">Zugübersicht öffnen</a>
+        <a href="/zug"><button>Öffnen</button></a>
     </div>
     {% endif %}
 
