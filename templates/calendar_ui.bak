@@ -1,19 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Kalender{% endblock %}
-
 {% block content %}
-<h1>Kalender – nächste 7 Tage</h1>
 
-<div class="grid">
-    {% for e in events %}
-    <div class="card">
-        <h3>{{ e.summary or "Ohne Titel" }}</h3>
-        {% if e.start.dateTime %}
-            <p>Start: {{ e.start.dateTime }}</p>
-        {% else %}
-            <p>Start: {{ e.start.date }}</p>
-        {% endif %}
+<h1>Termine</h1>
+
+<div id="events">
+  {% for e in events %}
+    <div class="event-box">
+      <strong>{{ e.name }}</strong><br>
+      {{ e.start }}
     </div>
-    {% endfor %}
+  {% endfor %}
 </div>
+
 {% endblock %}

@@ -12,30 +12,49 @@
             "pv": true,
             "alexa": false,
             "abfall": true,
-            "weather": true
+            "weather": true,
+            "zug": true
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-        "ics_url": ""
+
+        "ics_urls": [
+            {
+                "name": "Privat",
+                "color": "#3a82f7",
+                "url": ""
+            }
+        ]
     },
+
     "1234": {
         "name": "Test",
         "calendar_id": "test",
         "role": "user",
         "email": "test@test.de",
-        "ics_url": "",
-        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
-        "shopping_shared": true,
+        "first_login": false,
+        "blocked": false,
         "modules": {
             "calendar": true,
             "recipes": false,
             "pv": false,
             "alexa": false,
             "abfall": false,
-            "weather": true
+            "weather": true,
+            "zug": true
         },
-        "first_login": false
+        "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
+        "shopping_shared": true,
+
+        "ics_urls": [
+            {
+                "name": "Privat",
+                "color": "#3a82f7",
+                "url": ""
+            }
+        ]
     },
+
     "9999": {
         "name": "autoTest2",
         "calendar_id": "",
@@ -47,12 +66,23 @@
             "calendar": false,
             "recipes": false,
             "pv": false,
-            "alexa": false
+            "alexa": false,
+            "abfall": false,
+            "weather": false,
+            "zug": false
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-        "ics_url": ""
+
+        "ics_urls": [
+            {
+                "name": "Privat",
+                "color": "#3a82f7",
+                "url": ""
+            }
+        ]
     },
+
     "12345": {
         "name": "tt",
         "calendar_id": "tt",
@@ -66,10 +96,18 @@
             "pv": true,
             "alexa": true,
             "abfall": true,
-            "weather": true
+            "weather": true,
+            "zug": true
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-        "ics_url": ""
+
+        "ics_urls": [
+            {
+                "name": "Privat",
+                "color": "#3a82f7",
+                "url": "https://calendar.google.com/calendar/ical/polizeirhode%40gmail.com/private-4a72beac9f20510de8e50c77eb2c829b/basic.ics"
+            }
+        ]
     }
 }

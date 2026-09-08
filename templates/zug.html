@@ -5,11 +5,22 @@
 <h1>Zugübersicht</h1>
 
 <div class="grid">
+    {% if trains|length == 0 %}
+        <p>Keine Zugdaten verfügbar.</p>
+    {% endif %}
+
     {% for t in trains %}
     <div class="card">
         <h3>{{ t.line }}</h3>
-        <p>{{ t.time }}</p>
-        <p style="color: {{ t.color }};">Verspätung: {{ t.delay }}</p>
+
+        <p><strong>Plan:</strong> {{ t.plannedWhen }}</p>
+        <p><strong>Ist:</strong> {{ t.when }}</p>
+
+        <p>Gleis: {{ t.platform }}</p>
+
+        <p style="color: {{ t.color }};">
+            Verspätung: {{ t.delay // 60 }} min
+        </p>
     </div>
     {% endfor %}
 </div>

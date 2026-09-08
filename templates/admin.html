@@ -25,6 +25,32 @@
         <label>Email</label>
         <input name="email">
 
+        <!-- Kalender 1 -->
+        <h4>Kalender 1</h4>
+
+        <label>Kalender 1 Name:</label>
+        <input type="text" name="ics_name_1">
+
+        <label>Kalender 1 Farbe:</label>
+        <input type="color" name="ics_color_1" value="#3a82f7">
+
+        <label>Kalender 1 ICS‑URL:</label>
+        <input type="text" name="ics_url_1">
+
+        <hr>
+
+        <!-- Kalender 2 -->
+        <h4>Kalender 2</h4>
+
+        <label>Kalender 2 Name:</label>
+        <input type="text" name="ics_name_2">
+
+        <label>Kalender 2 Farbe:</label>
+        <input type="color" name="ics_color_2" value="#2ecc71">
+
+        <label>Kalender 2 ICS‑URL:</label>
+        <input type="text" name="ics_url_2">
+
         <button type="submit">Benutzer hinzufügen</button>
     </form>
 </div>
@@ -38,6 +64,21 @@
         <p>PIN: {{ pin }}</p>
         <p>Rolle: {{ user.role }}</p>
         <p>Email: {{ user.email }}</p>
+
+        <!-- Kalender anzeigen -->
+        {% if user.ics_urls %}
+            <h4>Kalender:</h4>
+            <ul>
+            {% for cal in user.ics_urls %}
+                <li>
+                    <span style="color: {{ cal.color }};">■</span>
+                    {{ cal.name }}  
+                    <br>
+                    <small>{{ cal.url }}</small>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
 
         <form method="POST" action="/admin/delete_user/{{ pin }}">
             <button style="background:#ef4444;">Löschen</button>

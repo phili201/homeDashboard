@@ -1,15 +1,302 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>Termine</h1>
+<h1>Kalender – {{ month }} / {{ year }}</h1>
 
-<div id="events">
-  {% for e in events %}
-    <div class="event-box">
-      <strong>{{ e.name }}</strong><br>
-      {{ e.start }}
-    </div>
-  {% endfor %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+  
+  <a href="/dashboard">
+    <button style="background:#3a82f7; color:white; padding:8px 14px; border-radius:6px;">
+      ← Dashboard
+    </button>
+  </a>
+
+  <div>
+    <a href="/calendar_ui/{{ year if month>1 else year-1 }}/{{ month-1 if month>1 else 12 }}">
+      <button>← Vorheriger Monat</button>
+    </a>
+
+    <a href="/calendar_ui/{{ year if month<12 else year+1 }}/{{ month+1 if month<12 else 1 }}">
+      <button>Nächster Monat →</button>
+    </a>
+  </div>
+
 </div>
+
+
+<!-- ⭐ KALENDER-LEGENDE -->
+<div id="legend" style="margin-bottom:15px; background:#1e1e1e; padding:10px; border-radius:8px;">
+  <h3>Kalenderübersicht</h3>
+  <div id="legend-items" style="display:flex; gap:15px; flex-wrap:wrap;"></div>
+</div>
+
+<div id="calendar"></div>
+
+<!-- Popup -->
+<div id="popup" style="
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    background:#222;
+    color:white;
+    padding:20px;
+    border-radius:10px;
+    z-index:999;
+    width:350px;
+">
+  <h3 id="popup-title"></h3>
+  <p id="popup-calendar"></p>
+  <p id="popup-time"></p>
+  <p id="popup-location"></p>
+  <p id="popup-description"></p>
+  <p id="popup-organizer"></p>
+  <p id="popup-attendees"></p>
+  <p id="popup-categories"></p>
+  <button onclick="closePopup()">Schließen</button>
+</div>
+
+<style>
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-cell {
+    background: #1e1e1e;
+    padding: 8px;
+    border-radius: 6px;
+    min-height: 100px;
+    color: white;
+    position: relative;
+  }
+  .day-cell.today {
+    border: 2px solid #3a82f7;
+  }
+
+  /* ⭐ Hover-Effekt */
+  .event {
+    padding: 3px;
+    margin-top: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .event:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px #000;
+  }
+
+  /* ⭐ Konflikt-Event */
+  .conflict {
+    border: 2px solid #ff4444 !important;
+    position: relative;
+  }
+  .conflict::after {
+    content: "⚠";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+
+  .week-header {
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom:10px;
+    text-align:center;
+    font-weight:bold;
+  }
+</style>
+
+<script>
+async function loadCalendar() {
+    const events = await fetch("/api/events/{{ session['pin'] }}").then(r => r.json());
+
+    const year = {{ year }};
+    const month = {{ month }} - 1;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    const calendarDiv = document.getElementById("calendar");
+
+    calendarDiv.innerHTML = `
+      <div class="week-header">
+        <div>Mo</div><div>Di</div><div>Mi</div>
+        <div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+      </div>
+      <div class='calendar-grid'></div>
+    `;
+
+    const grid = calendarDiv.querySelector(".calendar-grid");
+
+    // ⭐ LEGENDE AUFBAUEN
+    buildLegend(events);
+
+    // ⭐ KONFLIKTE ERKENNEN
+    const conflicts = detectConflicts(events);
+
+    // Montag = 0
+    let startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+
+    for (let i = 0; i < startOffset; i++) {
+        grid.innerHTML += "<div class='day-cell'></div>";
+    }
+
+    const today = new Date();
+
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const cell = document.createElement("div");
+        cell.className = "day-cell";
+
+        const dayDate = new Date(year, month, day);
+
+        if (
+            dayDate.getFullYear() === today.getFullYear() &&
+            dayDate.getMonth() === today.getMonth() &&
+            dayDate.getDate() === today.getDate()
+        ) {
+            cell.classList.add("today");
+        }
+
+        cell.innerHTML = `<strong>${day}</strong>`;
+
+        events.forEach(e => {
+            const eventDate = new Date(e.start);
+
+            if (eventDate.toDateString() === dayDate.toDateString()) {
+
+                const ev = document.createElement("div");
+                ev.className = "event";
+
+                const start = new Date(e.start);
+                const end = new Date(e.end);
+
+                let timeText = "";
+
+                if (
+                    start.getHours() === 0 && start.getMinutes() === 0 &&
+                    end.getHours() === 0 && end.getMinutes() === 0
+                ) {
+                    timeText = "(Ganztägig)";
+                } else {
+                    const pad = n => n.toString().padStart(2, "0");
+                    timeText = `${pad(start.getHours())}:${pad(start.getMinutes())} – ${pad(end.getHours())}:${pad(end.getMinutes())}`;
+                }
+
+                ev.style.backgroundColor = e.calendar_color;
+                ev.innerHTML = `<strong>${e.name}</strong><br>${timeText}<br><small>${e.calendar_name}</small>`;
+
+                // ⭐ Konflikt markieren
+                if (conflicts.includes(e)) {
+                    ev.classList.add("conflict");
+                }
+
+                ev.onclick = () => openPopup(e);
+
+                cell.appendChild(ev);
+            }
+        });
+
+        grid.appendChild(cell);
+    }
+}
+
+/* ⭐ LEGENDE */
+function buildLegend(events) {
+    const legendDiv = document.getElementById("legend-items");
+    legendDiv.innerHTML = "";
+
+    const calendars = {};
+
+    events.forEach(e => {
+        calendars[e.calendar_name] = e.calendar_color;
+    });
+
+    Object.entries(calendars).forEach(([name, color]) => {
+        const item = document.createElement("div");
+        item.innerHTML = `<span style="color:${color}; font-size:20px;">■</span> ${name}`;
+        legendDiv.appendChild(item);
+    });
+}
+
+/* ⭐ KONFLIKT-ERKENNUNG */
+function detectConflicts(events) {
+    const conflicts = [];
+
+    for (let i = 0; i < events.length; i++) {
+        for (let j = i + 1; j < events.length; j++) {
+
+            const a = events[i];
+            const b = events[j];
+
+            const aStart = new Date(a.start);
+            const aEnd = new Date(a.end);
+            const bStart = new Date(b.start);
+            const bEnd = new Date(b.end);
+
+            // gleiche Tage?
+            if (aStart.toDateString() !== bStart.toDateString()) continue;
+
+            // Überlappung?
+            if (aStart < bEnd && bStart < aEnd) {
+                conflicts.push(a);
+                conflicts.push(b);
+            }
+        }
+    }
+
+    return conflicts;
+}
+
+function openPopup(e) {
+
+    document.getElementById("popup-calendar").innerText =
+      "Kalender: " + e.calendar_name;
+
+    document.getElementById("popup-title").innerText = e.name;
+
+    document.getElementById("popup-time").innerText =
+        "Zeit: " +
+        new Date(e.start).toLocaleString() +
+        " – " +
+        new Date(e.end).toLocaleString();
+
+    document.getElementById("popup-location").innerText =
+        e.location ? "Ort: " + e.location : "";
+
+    document.getElementById("popup-description").innerText =
+        e.description ? "Beschreibung: " + e.description : "";
+
+    document.getElementById("popup-organizer").innerText =
+        e.organizer ? "Organisator: " + e.organizer : "";
+
+    document.getElementById("popup-attendees").innerText =
+        e.attendees && e.attendees.length
+            ? "Teilnehmer: " + e.attendees.join(", ")
+            : "";
+
+    document.getElementById("popup-categories").innerText =
+        e.categories && e.categories.length
+            ? "Kategorien: " + e.categories.join(", ")
+            : "";
+
+    document.getElementById("popup").style.display = "block";
+}
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
+
+loadCalendar();
+</script>
 
 {% endblock %}

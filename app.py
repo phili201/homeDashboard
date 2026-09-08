@@ -28,19 +28,40 @@ def load_users():
 
 def get_events_for_user(username):
     users = load_users()
-    ics_url = users[username]["ics_url"]
+    calendars = users[username].get("ics_urls", [])
 
-    r = requests.get(ics_url)
-    c = Calendar(r.text)
+    all_events = []
 
-    events = []
-    for event in c.events:
-        events.append({
-            "name": event.name,
-            "start": event.begin.datetime.isoformat(),
-            "end": event.end.datetime.isoformat()
-        })
-    return events
+    for cal in calendars:
+        url = cal["url"]
+        color = cal.get("color", "#3a82f7")
+        cal_name = cal.get("name", "Kalender")
+
+        try:
+            r = requests.get(url)
+            c = Calendar(r.text)
+
+            for event in c.events:
+                all_events.append({
+                    "name": event.name,
+                    "start": event.begin.datetime.isoformat(),
+                    "end": event.end.datetime.isoformat(),
+                    "location": event.location if event.location else "",
+                    "description": event.description if event.description else "",
+                    "organizer": str(getattr(event, "organizer", "")) if getattr(event, "organizer", None) else "",
+                    "attendees": [
+                        str(a.email) if hasattr(a, "email") else str(a)
+                        for a in getattr(event, "attendees", [])
+                    ],
+                    "categories": list(event.categories) if event.categories else [],
+                    "calendar_name": cal_name,
+                    "calendar_color": color
+                })
+        except Exception as e:
+            print("ICS Fehler:", e)
+
+    return all_events
+
 
 
 
@@ -146,7 +167,32 @@ def add_user():
     calendar_id = request.form["calendar_id"]
     role = request.form["role"]
     email = request.form["email"]
-    ics_url = request.form["ics_url"]
+
+    # Mehrere Kalender aus dem Formular
+    # Erwartet Felder wie: ics_name_1, ics_color_1, ics_url_1, ics_name_2, ...
+    ics_urls = []
+    index = 1
+
+    while True:
+        name_key = f"ics_name_{index}"
+        color_key = f"ics_color_{index}"
+        url_key = f"ics_url_{index}"
+
+        if name_key not in request.form or url_key not in request.form:
+            break
+
+        ics_name = request.form[name_key].strip()
+        ics_color = request.form[color_key].strip() or "#3a82f7"
+        ics_url = request.form[url_key].strip()
+
+        if ics_name and ics_url:
+            ics_urls.append({
+                "name": ics_name,
+                "color": ics_color,
+                "url": ics_url
+            })
+
+        index += 1
 
     users[pin] = {
         "name": name,
@@ -161,15 +207,19 @@ def add_user():
             "pv": False,
             "alexa": False,
             "abfall": False,
-            "weather": False
+            "weather": False,
+            "zug": False
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": True,
-        "ics_url": ics_url
+
+        # NEU: mehrere Kalender
+        "ics_urls": ics_urls
     }
 
     save_users()
     return redirect("/admin")
+
 
 @app.route("/admin/delete_user/<pin>", methods=["POST"])
 def delete_user(pin):
@@ -286,7 +336,8 @@ def setup():
             "pv": False,
             "alexa": False,
             "abfall": False,
-            "weather": False
+            "weather": False,
+            "zug": False
         })
 
         users[pin]["modules"]["calendar"] = "calendar" in request.form
@@ -296,6 +347,7 @@ def setup():
         users[pin]["modules"]["abfall"] = "abfall" in request.form
         users[pin]["modules"]["recipes"] = "recipes" in request.form
         users[pin]["modules"]["weather"] = "weather" in request.form
+        users[pin]["modules"]["zug"] = "zug" in request.form
 
 
 
@@ -310,11 +362,19 @@ def calendar_ui():
     if "user" not in session:
         return redirect("/login")
 
+    now = datetime.now()
+    return redirect(f"/calendar_ui/{now.year}/{now.month}")
+
+
+@app.route("/calendar_ui/<int:year>/<int:month>")
+def calendar_ui_month(year, month):
+    if "user" not in session:
+        return redirect("/login")
+
     username = session["pin"]
     events = get_events_for_user(username)
 
-    return render_template("calendar_ui.html", events=events)
-
+    return render_template("calendar_ui.html", events=events, year=year, month=month)
 
 
 
@@ -417,14 +477,75 @@ def wetter():
 
 @app.route("/zug")
 def zug():
-    from zug_module import filter_trains, delay_color
-    trains = filter_trains()
+    from zug_module import delay_color
 
-    # Farben hinzufügen
+    try:
+        trains = requests.get("http://localhost:5000/api/zug_live", timeout=0.5).json()
+    except:
+        trains = []
+
     for t in trains:
-        t["color"] = delay_color(t.get("delay"))
+        t["color"] = delay_color(t.get("delay", 0))
 
     return render_template("zug.html", trains=trains)
+
+
+@app.route("/api/zug_live")
+def api_zug_live():
+    import requests
+    import xml.etree.ElementTree as ET
+    from datetime import datetime
+
+    # Zeitformat für DB API
+    now = datetime.now()
+    date = now.strftime("%Y%m%d")
+    hour = now.strftime("%H00")
+
+    url = f"https://api.deutschebahn.com/timetables/v1/plan/8001531/{date}/{hour}"
+
+    headers = {
+        "Authorization": "Bearer e8158b5b7a2694ad962b70fd8818ff27"
+    }
+
+    try:
+        r = requests.get(url, headers=headers, timeout=3)
+
+        if not r.text.strip():
+            return []
+
+        root = ET.fromstring(r.text)
+
+        result = []
+
+        for s in root.findall(".//s")[:10]:
+            dp = s.find("dp")
+            if dp is None:
+                continue
+
+            line = dp.get("l", "Unbekannt")
+            direction = dp.get("ppth", "Unbekannt").split("|")[-1]
+            planned = dp.get("pt", "")
+            actual = dp.get("ct", planned)
+            delay = dp.get("d", "0")
+            platform = dp.get("pp", "?")
+
+            result.append({
+                "line": line,
+                "direction": direction,
+                "plannedWhen": planned,
+                "when": actual,
+                "delay": int(delay),
+                "platform": platform
+            })
+
+        return result
+
+    except Exception as e:
+        print("Zug-API Fehler:", e)
+        return []
+
+
+
 
 @app.route("/pv")
 def pv():

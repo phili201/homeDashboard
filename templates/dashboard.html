@@ -4,6 +4,38 @@
 {% block content %}
 <h1>HomeDashboard</h1>
 
+<div class="card" style="margin-bottom: 20px;">
+    <h3>Uhr & Datum</h3>
+    <p id="live-time" style="font-size:22px; font-weight:bold;"></p>
+    <p id="live-date" style="font-size:16px;"></p>
+</div>
+
+<script>
+function updateClock() {
+    const now = new Date();
+
+    const time = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+
+    const date = now.toLocaleDateString("de-DE", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+
+    document.getElementById("live-time").innerText = time;
+    document.getElementById("live-date").innerText = date;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+
 <div class="grid">
 
     {% if modules.weather %}
@@ -42,21 +74,37 @@
         <h3>Kalender</h3>
         <div id="events"></div>
         <script>
-        fetch("/api/events/{{ pin }}")
-        .then(r => r.json())
-        .then(events => {
-            const div = document.getElementById("events");
-            events.forEach(e => {
-            const box = document.createElement("div");
-            box.className = "event-box";
-            box.innerHTML = `
-                <strong>${e.name}</strong><br>
-                ${new Date(e.start).toLocaleString()}
-            `;
-            div.appendChild(box);
+            fetch("/api/events/{{ pin }}")
+            .then(r => r.json())
+            .then(events => {
+                const div = document.getElementById("events");
+
+                const today = new Date();
+                const todayString = today.toDateString();
+
+                // Nur Termine des heutigen Tages anzeigen
+                const todaysEvents = events.filter(e => {
+                    const eventDate = new Date(e.start);
+                    return eventDate.toDateString() === todayString;
+                });
+
+                todaysEvents.forEach(e => {
+                    const box = document.createElement("div");
+                    box.className = "event-box";
+                    box.innerHTML = `
+                        <strong>${e.name}</strong><br>
+                        ${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                    `;
+                    div.appendChild(box);
+                });
+
+                // Falls keine Termine heute
+                if (todaysEvents.length === 0) {
+                    div.innerHTML = "<p>Keine Termine heute</p>";
+                }
             });
-        });
-        </script>
+            </script>
+
         <a href="/calendar_ui"><button>Details</button></a>
     </div>
 
@@ -71,10 +119,48 @@
 
     {% if modules.zug %}
     <div class="card">
-        <h3>Züge</h3>
-        <a href="/zug"><button>Öffnen</button></a>
+        <h3>Live‑Züge Drensteinfurt</h3>
+        <div id="zug-live"></div>
+
+        <script>
+        function loadZugLive() {
+            fetch("/api/zug_live")
+            .then(r => r.json())
+            .then(data => {
+                const div = document.getElementById("zug-live");
+                div.innerHTML = "";
+
+                data.forEach(z => {
+                    const box = document.createElement("div");
+                    box.style.marginBottom = "8px";
+
+                    const planned = new Date(z.plannedWhen);
+                    const actual = new Date(z.when);
+
+                    const delayMin = Math.round(z.delay / 60);
+
+                    box.innerHTML = `
+                        <strong>${z.line}</strong> → ${z.direction}<br>
+                        ${planned.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}
+                        ${delayMin > 0 ? "<span style='color:#ff4444;'>+" + delayMin + " min</span>" : ""}
+                        <br>
+                        Gleis ${z.platform}
+                    `;
+
+                    div.appendChild(box);
+                });
+            });
+        }
+
+        // alle 30 Sekunden aktualisieren
+        loadZugLive();
+        setInterval(loadZugLive, 30000);
+        </script>
+
+        <a href="/zug"><button>Details</button></a>
     </div>
     {% endif %}
+
 
 </div>
 {% endblock %}
