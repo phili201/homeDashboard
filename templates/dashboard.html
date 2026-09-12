@@ -2,24 +2,25 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>HomeDashboard</h1>
+
+<h1 class="dashboard-title">HomeDashboard</h1>
 
 {% if logged_in %}
-<p style="color: lightgreen;">Eingeloggt als: {{ pin }}</p>
+<p class="login-success">Eingeloggt als: {{ pin }}</p>
 {% else %}
-<p style="color: orange;">Nicht eingeloggt – Module benötigen Login</p>
+<p class="login-warning">Nicht eingeloggt – Module benötigen Login</p>
 {% endif %}
 
-<div class="card" style="margin-bottom: 20px;">
+<div class="card">
     <h3>Uhr & Datum</h3>
-    <p id="live-time" style="font-size:22px; font-weight:bold;"></p>
-    <p id="live-date" style="font-size:16px;"></p>
+    <p id="live-time" class="clock-time"></p>
+    <p id="live-date" class="clock-date"></p>
 </div>
-<div id="push-banner" style="display:none;" class="banner">
+
+<div id="push-banner" class="banner" style="display:none;">
   <p>🔔 Benachrichtigungen aktivieren</p>
   <button onclick="subscribePush()">Aktivieren</button>
 </div>
-
 
 <script>
 function updateClock() {
@@ -51,7 +52,7 @@ async function renderModule(name, renderFunction) {
     const status = await loadModuleStatus();
 
     if (status[name] === "ready") {
-        renderFunction(); // normales Modul anzeigen
+        renderFunction();
     }
 
     else if (status[name] === "work") {
@@ -76,6 +77,7 @@ async function renderModule(name, renderFunction) {
         document.getElementById(name).style.display = "none";
     }
 }
+
 async function subscribePush() {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
         alert("Push wird von diesem Gerät nicht unterstützt.");
@@ -100,19 +102,17 @@ async function subscribePush() {
         body: JSON.stringify(sub)
     });
 
-    // Banner ausblenden
     document.getElementById("push-banner").style.display = "none";
 }
+
 async function checkPushStatus() {
     const banner = document.getElementById("push-banner");
 
-    // 1. Permission check
     if (Notification.permission !== "granted") {
         banner.style.display = "block";
         return;
     }
 
-    // 2. Subscription check
     const reg = await navigator.serviceWorker.getRegistration();
     const sub = await reg.pushManager.getSubscription();
 
@@ -121,16 +121,13 @@ async function checkPushStatus() {
         return;
     }
 
-    // 3. Alles OK → Banner ausblenden
     banner.style.display = "none";
 }
-
 
 setInterval(updateClock, 1000);
 updateClock();
 checkPushStatus();
 </script>
-
 
 <div class="grid">
 
@@ -143,7 +140,6 @@ checkPushStatus();
 
     <div class="card">
         <h3>PV-Anlage</h3>
-        <p>{{ pv.power }} W – {{ pv.status }}</p>
 
         {% if logged_in %}
             <a href="/pv/detail"><button>Details</button></a>
@@ -210,7 +206,6 @@ checkPushStatus();
         <a href="/einkaufsliste"><button>Öffnen</button></a>
     </div>
 
-
-
 </div>
+
 {% endblock %}

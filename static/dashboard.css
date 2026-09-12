@@ -47,26 +47,66 @@ body {
     padding: 24px;
 }
 
+/* ===== Dashboard Title ===== */
+.dashboard-title {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 25px;
+    color: #38bdf8;
+}
+
+/* ===== Login Hinweise ===== */
+.login-success {
+    color: lightgreen;
+    margin-bottom: 15px;
+}
+
+.login-warning {
+    background: #111827;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #facc15;
+}
+
 /* ===== Cards / Widgets ===== */
 .card {
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    background: #111827;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #1f2937;
 }
-.card:hover {
-    transform: translateY(-3px);
-    transition: 0.2s;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.65);
-}
+
+
 
 /* ===== Grid Layout ===== */
 .grid {
     display: grid;
-    gap: 20px;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* ===== Buttons ===== */
+button {
+    display: inline-block;
+    width: 100%;          /* alle Buttons gleich breit in den Cards */
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: #f9fafb;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #1d4ed8;
 }
 
 /* ===== Inputs ===== */
@@ -85,51 +125,43 @@ input:focus, select:focus {
     border-color: #38bdf8;
 }
 
-/* ===== Buttons ===== */
-button {
-    margin-top: 14px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    border: none;
-    background: linear-gradient(135deg, #38bdf8, #6366f1);
-    color: white;
-    font-weight: 500;
-    cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+/* ===== Banner (ruhiger gemacht) ===== */
+.banner {
+    background: #111827;
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 16px;
+    text-align: center;
+    border: 1px solid #1f2937;
 }
 
-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35);
+/* ===== Uhr ===== */
+.clock-time {
+    font-size: 22px;
+    font-weight: 600;
 }
 
-/* ===== Error ===== */
-.error {
-    color: #f97373;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
+.clock-date {
+    font-size: 14px;
+    opacity: 0.85;
 }
 
-.legend {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
+/* ===== Status ===== */
+.Baustelle {
+    border-left: 4px solid #facc15;
 }
 
-.legend li {
-    background: #1e1e1e;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    font-size: 16px;
+.Error {
+    border-left: 4px solid #ef4444;
 }
 
+/* ===== Event Box ===== */
 .event-box {
-  background: #1e1e1e;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  color: white;
+    background: #1e1e1e;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    color: white;
 }
 
 /* ===== Modal Login ===== */
@@ -189,6 +221,7 @@ button:hover {
     margin-left: 16px;
 }
 
+/* ===== Responsive ===== */
 @media (max-width: 640px) {
     .topbar {
         flex-direction: column;
@@ -207,17 +240,165 @@ button:hover {
     }
 }
 
-.back-btn {
-    margin-right: 15px;
-    background: #3a82f7;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: 0.2s;
+.weather-box {
+    background: #111827;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid #1f2937;
+    margin-bottom: 20px;
 }
 
-.back-btn:hover {
-    background: #2a6ad0;
+.weather-icon {
+    font-size: 60px;
+    text-align: center;
 }
+
+.weather-temp {
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.weather-info p {
+    margin: 4px 0;
+}
+
+.forecast-24h, .forecast-7d {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.forecast-item, .forecast-day {
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* Titel */
+.weather-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #38bdf8;
+}
+
+/* Aktuelles Wetter */
+.weather-current {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 20px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    border: 1px solid #1f2937;
+}
+
+.wc-left {
+    text-align: center;
+}
+
+.wc-icon {
+    font-size: 60px;
+    margin-bottom: 10px;
+}
+
+.wc-temp {
+    font-size: 48px;
+    font-weight: 700;
+}
+
+.wc-desc {
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.wc-right {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+}
+
+.wc-badge {
+    background: #1f2937;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+/* Section Titel */
+.section-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #93c5fd;
+}
+
+/* 24h Forecast */
+.forecast-24h {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 10px;
+}
+
+.f24-item {
+    background: #1f2937;
+    padding: 12px;
+    border-radius: 12px;
+    min-width: 70px;
+    text-align: center;
+}
+
+.f24-time {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.f24-temp {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.f24-rain {
+    font-size: 12px;
+    color: #60a5fa;
+}
+
+/* 7 Tage */
+.forecast-7d {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.f7-card {
+    background: #1e293b;
+    padding: 14px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid #1f2937;
+}
+
+.f7-day {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.f7-icon {
+    font-size: 32px;
+    margin: 8px 0;
+}
+
+.f7-temp {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.f7-rain, .f7-wind {
+    font-size: 14px;
+    opacity: 0.8;
+}
+

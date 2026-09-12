@@ -7,6 +7,8 @@ from rezepte_api import search_recipes, get_recipe_details
 from ics import Calendar
 import requests
 from pywebpush import webpush, WebPushException
+import os
+from wetter_module import get_weather_widget, weather_icon, get_weather
 
 app = Flask(__name__)
 app.secret_key = "Rhode_Rhode_rhode_RHode"
@@ -280,6 +282,28 @@ def push_abfall_check():
 
     send_push_to_all(title, body)
     return "Push gesendet."
+
+
+@app.route("/api/wetter_warnings")
+def wetter_warnings():
+    w = get_weather()
+    warnings = w.get("warnings", [])
+
+    if not warnings:
+        return {"status": "ok", "message": "Keine Warnungen"}
+
+    for warn in warnings:
+        try:
+            webpush(
+                subscription_info=json.loads(open("subscription.json").read()),
+                data=json.dumps({"title": "Wetterwarnung", "body": warn}),
+                vapid_private_key=open("vapid_private.pem").read(),
+                vapid_claims={"sub": "mailto:admin@example.com"}
+            )
+        except Exception as e:
+            print("Push Fehler:", e)
+
+    return {"status": "sent", "count": len(warnings)}
 
 
 
@@ -792,6 +816,11 @@ def pv():
 
     return render_template("pv.html", pv=pv_data)
 
+@app.route("/pv/day")
+def pv_day():
+    curve = get_pv_day_curve()
+    return render_template("pv_day.html", curve=curve)
+
 
 @app.route("/pv/detail")
 def pv_detail():
@@ -816,17 +845,15 @@ def pv_detail():
 
 @app.route("/wetter")
 def wetter():
-    status = load_module_status()
-    if status.get("weather", "ready") != "ready":
-        return render_template("baustelle.html")
+    w = get_weather()
 
-    from wetter_module import get_weather, weather_icon
+    # Falls API fehlschlägt → Crash verhindern
+    if not w or "current" not in w:
+        return "Wetterdaten konnten nicht geladen werden", 500
 
-    w = get_weather() or {}
-    icon = weather_icon(w.get("code", 0))
+    icon = weather_icon(w["current"].get("weathercode"))
 
     return render_template("wetter.html", w=w, icon=icon)
-
 
 # ---------------------------------------------------------
 # Module Status API

@@ -1,15 +1,49 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>🌦️ Wetter in Drensteinfurt</h2>
+<h2 class="weather-title">Wetter in Drensteinfurt</h2>
 
-<div class="weather-box">
-    <div class="weather-icon">{{ icon }}</div>
-    <div class="weather-temp">{{ w.temp }}°C</div>
-    <div class="weather-info">
-        <p>Wind: {{ w.wind }} km/h</p>
-        <p>Code: {{ w.code }}</p>
+<!-- Aktuelles Wetter -->
+<div class="weather-current">
+    <div class="wc-left">
+        <div class="wc-icon">{{ icon }}</div>
+        <div class="wc-temp">{{ w.current.temperature }}°</div>
+        <div class="wc-desc">{{ w.current.code_text }}</div>
     </div>
+
+    <div class="wc-right">
+        <div class="wc-badge">💨 {{ w.current.wind }} km/h</div>
+        <div class="wc-badge">💧 {{ w.hourly.relativehumidity_2m[0] }}%</div>
+        <div class="wc-badge">☁️ {{ w.hourly.cloudcover[0] }}%</div>
+        <div class="wc-badge">🌧️ {{ w.hourly.precipitation_probability[0] }}%</div>
+        <div class="wc-badge">🔆 UV {{ w.hourly.uv_index[0] }}</div>
+    </div>
+</div>
+
+<!-- 24h Forecast -->
+<h3 class="section-title">Nächste 24 Stunden</h3>
+<div class="forecast-24h">
+    {% for i in range(0, 24) %}
+        <div class="f24-item">
+            <p class="f24-time">{{ w.hourly.time[i][11:16] }}</p>
+            <p class="f24-temp">{{ w.hourly.temperature_2m[i] }}°</p>
+            <p class="f24-rain">{{ w.hourly.precipitation_probability[i] }}%</p>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- 7 Tage -->
+<h3 class="section-title">7‑Tage‑Vorhersage</h3>
+<div class="forecast-7d">
+    {% for i in range(0, 7) %}
+        <div class="f7-card">
+            <div class="f7-day">{{ w.daily.time[i] }}</div>
+            <div class="f7-icon">{{ w.daily.icon[i] }}</div>
+            <div class="f7-temp">{{ w.daily.temperature_2m_max[i] }}° / {{ w.daily.temperature_2m_min[i] }}°</div>
+            <div class="f7-rain">🌧️ {{ w.daily.precipitation_probability_max[i] }}%</div>
+            <div class="f7-wind">💨 {{ w.daily.wind_speed_10m_max[i] }} km/h</div>
+        </div>
+    {% endfor %}
 </div>
 
 {% endblock %}
