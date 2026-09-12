@@ -4,6 +4,12 @@
 {% block content %}
 <h1>HomeDashboard</h1>
 
+{% if logged_in %}
+<p style="color: lightgreen;">Eingeloggt als: {{ pin }}</p>
+{% else %}
+<p style="color: orange;">Nicht eingeloggt – Module benötigen Login</p>
+{% endif %}
+
 <div class="card" style="margin-bottom: 20px;">
     <h3>Uhr & Datum</h3>
     <p id="live-time" style="font-size:22px; font-weight:bold;"></p>
@@ -31,6 +37,42 @@ function updateClock() {
     document.getElementById("live-date").innerText = date;
 }
 
+async function loadModuleStatus() {
+    const res = await fetch("/api/module_status");
+    return await res.json();
+}
+
+async function renderModule(name, renderFunction) {
+    const status = await loadModuleStatus();
+
+    if (status[name] === "ready") {
+        renderFunction(); // normales Modul anzeigen
+    }
+
+    else if (status[name] === "work") {
+        document.getElementById(name).innerHTML = `
+            <div class="card Baustelle">
+                🛠 Modul wird gebaut…
+                <br>Status: unfertig
+            </div>
+        `;
+    }
+
+    else if (status[name] === "error") {
+        document.getElementById(name).innerHTML = `
+            <div class="card Error">
+                ⚠ Fehler im Modul
+                <br>Bitte später erneut versuchen
+            </div>
+        `;
+    }
+
+    else if (status[name] === "disabled") {
+        document.getElementById(name).style.display = "none";
+    }
+}
+
+
 setInterval(updateClock, 1000);
 updateClock();
 </script>
@@ -38,128 +80,82 @@ updateClock();
 
 <div class="grid">
 
-    {% if modules.weather %}
     <div class="card">
         <h3>Wetter</h3>
         <p>{{ weather.temp }} °C</p>
         <p>{{ weather_icon }}</p>
         <a href="/wetter"><button>Details</button></a>
     </div>
-    {% endif %}
 
-    {% if modules.pv %}
     <div class="card">
         <h3>PV-Anlage</h3>
         <p>{{ pv.power }} W – {{ pv.status }}</p>
-        <a href="/pv"><button>Details</button></a>
-    </div>
-    {% endif %}
 
-    {% if modules.abfall %}
+        {% if logged_in %}
+            <a href="/pv/detail"><button>Details</button></a>
+        {% else %}
+            <a href="/pv"><button>Details</button></a>
+        {% endif %}
+    </div>
+
     <div class="card">
         <h3>Abfallkalender</h3>
-        <a href="/abfall"><button>Öffnen</button></a>
-    </div>
-    {% endif %}
+        <a href="/abfall"><button>Tagesansicht</button></a>
 
-    {% if modules.recipes %}
+        {% if logged_in %}
+            <a href="/abfall_monat"><button>Monatsansicht</button></a>
+        {% endif %}
+    </div>
+
     <div class="card">
         <h3>Rezepte</h3>
         <a href="/rezepte/search"><button>Suchen</button></a>
     </div>
-    {% endif %}
 
-    {% if modules.calendar %}
     <div class="card">
         <h3>Kalender</h3>
         <div id="events"></div>
-        <script>
-            fetch("/api/events/{{ pin }}")
-            .then(r => r.json())
-            .then(events => {
-                const div = document.getElementById("events");
 
-                const today = new Date();
-                const todayString = today.toDateString();
+        {% if logged_in %}
+            <script>
+                fetch("/api/events/{{ pin }}")
+                .then(r => r.json())
+                .then(events => {
+                    const div = document.getElementById("events");
+                    const today = new Date();
+                    const todayString = today.toDateString();
 
-                // Nur Termine des heutigen Tages anzeigen
-                const todaysEvents = events.filter(e => {
-                    const eventDate = new Date(e.start);
-                    return eventDate.toDateString() === todayString;
+                    const todaysEvents = events.filter(e => {
+                        const eventDate = new Date(e.start);
+                        return eventDate.toDateString() === todayString;
+                    });
+
+                    todaysEvents.forEach(e => {
+                        const box = document.createElement("div");
+                        box.className = "event-box";
+                        box.innerHTML = `
+                            <strong>${e.name}</strong><br>
+                            ${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                        `;
+                        div.appendChild(box);
+                    });
+
+                    if (todaysEvents.length === 0) {
+                        div.innerHTML = "<p>Keine Termine heute</p>";
+                    }
                 });
-
-                todaysEvents.forEach(e => {
-                    const box = document.createElement("div");
-                    box.className = "event-box";
-                    box.innerHTML = `
-                        <strong>${e.name}</strong><br>
-                        ${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                    `;
-                    div.appendChild(box);
-                });
-
-                // Falls keine Termine heute
-                if (todaysEvents.length === 0) {
-                    div.innerHTML = "<p>Keine Termine heute</p>";
-                }
-            });
             </script>
-
-        <a href="/calendar_ui"><button>Details</button></a>
+            <a href="/calendar_ui"><button>Details</button></a>
+        {% else %}
+            <button type="button" class="login-trigger">Login</button>
+        {% endif %}
     </div>
 
-    {% endif %}
-
-    {% if modules.einkaufsliste %}
     <div class="card">
         <h3>Einkaufsliste</h3>
         <a href="/einkaufsliste"><button>Öffnen</button></a>
     </div>
-    {% endif %}
 
-    {% if modules.zug %}
-    <div class="card">
-        <h3>Live‑Züge Drensteinfurt</h3>
-        <div id="zug-live"></div>
-
-        <script>
-        function loadZugLive() {
-            fetch("/api/zug_live")
-            .then(r => r.json())
-            .then(data => {
-                const div = document.getElementById("zug-live");
-                div.innerHTML = "";
-
-                data.forEach(z => {
-                    const box = document.createElement("div");
-                    box.style.marginBottom = "8px";
-
-                    const planned = new Date(z.plannedWhen);
-                    const actual = new Date(z.when);
-
-                    const delayMin = Math.round(z.delay / 60);
-
-                    box.innerHTML = `
-                        <strong>${z.line}</strong> → ${z.direction}<br>
-                        ${planned.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}
-                        ${delayMin > 0 ? "<span style='color:#ff4444;'>+" + delayMin + " min</span>" : ""}
-                        <br>
-                        Gleis ${z.platform}
-                    `;
-
-                    div.appendChild(box);
-                });
-            });
-        }
-
-        // alle 30 Sekunden aktualisieren
-        loadZugLive();
-        setInterval(loadZugLive, 30000);
-        </script>
-
-        <a href="/zug"><button>Details</button></a>
-    </div>
-    {% endif %}
 
 
 </div>

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Einkaufsliste{% endblock %}
+
+{% block content %}
+<h1>Einkaufsliste</h1>
+
+<!-- Listen-Auswahl -->
+<select id="list-select" onchange="changeList()">
+    <option value="haushalt">Haushalt</option>
+    <option value="schule">Schule</option>
+    <option value="urlaub">Urlaub</option>
+</select>
+
+<div>
+    <input id="item-input" placeholder="Artikel..." />
+    <select id="category-input">
+        <option value="Sonstiges">Sonstiges</option>
+        <option value="Obst">Obst</option>
+        <option value="Gemüse">Gemüse</option>
+        <option value="Getränke">Getränke</option>
+        <option value="Haushalt">Haushalt</option>
+        <option value="Tiefkühl">Tiefkühl</option>
+    </select>
+    <button onclick="addItem()">Hinzufügen</button>
+    <button onclick="startQR()">QR‑Scan</button>
+    <button onclick="window.location.href='/einkaufsliste/schreibblatt'">
+        Schreibblatt öffnen
+    </button>
+
+</div>
+
+<video id="qr-video" style="width:100%; display:none;"></video>
+
+<ul id="item-list"></ul>
+
+<button onclick="clearList()">Liste leeren</button>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let currentList = "haushalt";
+let lists = {
+    haushalt: [],
+    schule: [],
+    urlaub: []
+};
+
+function changeList() {
+    currentList = document.getElementById("list-select").value;
+    loadLocal();
+    renderList();
+}
+
+// -----------------------------
+// Lokale Speicherung
+// -----------------------------
+function loadLocal() {
+    const raw = localStorage.getItem("einkaufsliste_multi");
+    if (raw) {
+        try { lists = JSON.parse(raw); } catch(e) {}
+    }
+}
+
+function saveLocal() {
+    localStorage.setItem("einkaufsliste_multi", JSON.stringify(lists));
+}
+
+// -----------------------------
+// Server Sync
+// -----------------------------
+function loadFromServer() {
+    fetch("/api/einkaufsliste")
+        .then(r => r.json())
+        .then(serverLists => {
+            if (serverLists) {
+                lists = serverLists;
+                saveLocal();
+            }
+            renderList();
+        });
+}
+
+function syncToServer() {
+    fetch("/api/einkaufsliste", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({lists})
+    });
+}
+
+// -----------------------------
+// Kategorie automatisch erkennen
+// -----------------------------
+function detectCategory(name) {
+    const n = name.toLowerCase();
+
+    // Milchprodukte
+    if (n.includes("milch")) return "Milchprodukte";
+    if (n.includes("joghurt")) return "Milchprodukte";
+    if (n.includes("käse")) return "Milchprodukte";
+    if (n.includes("butter")) return "Milchprodukte";
+
+    // Getränke
+    if (n.includes("cola") || n.includes("fanta") || n.includes("saft") || n.includes("wasser") || n.includes("tee") || n.includes("kaffee"))
+        return "Getränke";
+
+    // Obst
+    const obst = ["apfel", "banane", "birne", "orange", "kiwi", "traube"];
+    if (obst.some(w => n.includes(w))) return "Obst";
+
+    // Gemüse
+    const gemuese = ["tomate", "gurke", "paprika", "zwiebel", "karotte", "salat"];
+    if (gemuese.some(w => n.includes(w))) return "Gemüse";
+
+    // Tiefkühl
+    const tk = ["pizza", "eis", "pommes", "lasagne", "tk"];
+    if (tk.some(w => n.includes(w))) return "Tiefkühl";
+
+    // Haushalt
+    const haushalt = ["schwamm", "seife", "spülmittel", "tuch", "reiniger"];
+    if (haushalt.some(w => n.includes(w))) return "Haushalt";
+
+    return "Sonstiges";
+}
+
+
+
+// -----------------------------
+// Mehrere Artikel gleichzeitig hinzufügen
+// -----------------------------
+// mehrere Artikel + Mengen + Kategorie automatisch erkennen
+function addItem() {
+    const raw = document.getElementById("item-input").value.trim();
+    if (!raw) return;
+
+    // Split bei Komma, Semikolon oder Zeilenumbruch
+    const parts = raw.split(/[,;\n]/).map(p => p.trim()).filter(p => p.length > 0);
+
+    parts.forEach(line => {
+        let amount = 1;
+        let name = line;
+
+        const match = line.match(/^(\d+)\s*(x|X|Stück|Packungen)?\s+(.*)$/);
+        if (match) {
+            amount = parseInt(match[1]);
+            name = match[3].trim();
+        }
+
+        if (name.toLowerCase() === "milch") {
+            name = "Milch 1,5%";
+        }
+
+        const category = detectCategory(name);
+        const displayName = amount > 1 ? `${amount}x ${name}` : name;
+
+        lists[currentList].push({
+            name: displayName,
+            category,
+            done: false
+        });
+    });
+
+    document.getElementById("item-input").value = "";
+    saveLocal();
+    syncToServer();
+    renderList();
+}
+
+
+
+
+// -----------------------------
+// Liste rendern
+// -----------------------------
+function renderList() {
+    const ul = document.getElementById("item-list");
+    ul.innerHTML = "";
+
+    lists[currentList].forEach((item, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <span style="${item.done ? 'text-decoration: line-through;' : ''}">
+                [${item.category}] ${item.name}
+            </span>
+            <button onclick="toggleDone(${index})">✓</button>
+            <button onclick="removeItem(${index})">🗑</button>
+        `;
+        ul.appendChild(li);
+    });
+}
+
+// -----------------------------
+// Artikel abhaken
+// -----------------------------
+function toggleDone(index) {
+    lists[currentList][index].done = !lists[currentList][index].done;
+    saveLocal();
+    syncToServer();
+    renderList();
+}
+
+// -----------------------------
+// Artikel löschen
+// -----------------------------
+function removeItem(index) {
+    lists[currentList].splice(index, 1);
+    saveLocal();
+    syncToServer();
+    renderList();
+}
+
+// -----------------------------
+// Liste leeren
+// -----------------------------
+function clearList() {
+    if (!confirm("Liste wirklich leeren?")) return;
+    lists[currentList] = [];
+    saveLocal();
+    syncToServer();
+    renderList();
+}
+
+// -----------------------------
+// QR‑Scanner
+// -----------------------------
+function startQR() {
+    const video = document.getElementById("qr-video");
+    video.style.display = "block";
+
+    const qrScanner = new Html5Qrcode("qr-video");
+
+    qrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+            addScannedItem(qrCodeMessage);
+            qrScanner.stop();
+            video.style.display = "none";
+        },
+        error => {}
+    );
+}
+
+function addScannedItem(text) {
+    let name = text.trim();
+
+    if (name.toLowerCase() === "milch") {
+        name = "Milch 1,5%";
+    }
+
+    const category = detectCategory(name);
+
+    lists[currentList].push({
+        name,
+        category,
+        done: false
+    });
+
+    saveLocal();
+    syncToServer();
+    renderList();
+}
+
+
+
+// -----------------------------
+// Start
+// -----------------------------
+loadLocal();
+renderList();
+loadFromServer();
+</script>
+
+{% endblock %}

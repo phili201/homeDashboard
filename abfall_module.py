@@ -1,5 +1,6 @@
+import calendar
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def load_abfall_events():
     try:
@@ -79,3 +80,18 @@ def build_month_view(events, year, month):
         month_grid.append(week_row)
 
     return month_grid
+
+def get_upcoming_abfall_events(events, days=7):
+    now = datetime.now()
+    upcoming = []
+
+    for e in events:
+        try:
+            start = datetime.fromisoformat(e["begin"])
+        except:
+            continue
+
+        if start >= now and start <= now + timedelta(days=days):
+            upcoming.append(e)
+
+    return sorted(upcoming, key=lambda x: x["begin"])

@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
     <title>{% block title %}HomeDashboard{% endblock %}</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
 <body>
@@ -11,9 +14,16 @@
         <header class="topbar">
             <div class="logo">HomeDashboard</div>
             <nav>
+                {% if request.path != "/dashboard" %}
+                    <a href="/dashboard" class="back-btn">← Zurück</a>
+                {% endif %}
                 <a href="/dashboard">Dashboard</a>
                 <a href="/admin">Admin</a>
-                <a href="/logout">Logout</a>
+                {% if 'pin' in session %}
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <button type="button" class="login-trigger">Anmelden</button>
+                {% endif %}
             </nav>
         </header>
 
@@ -22,5 +32,88 @@
         </main>
 
     </div>
+
+    {% if not session.get('pin') %}
+    <div id="loginModal" class="modal{% if show_login_modal %} is-open{% endif %}" aria-hidden="{% if show_login_modal %}false{% else %}true{% endif %}">
+        <div class="modal-backdrop" data-close-login="true"></div>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+            <div class="modal-header">
+                <h2 id="loginTitle">Login</h2>
+                <button type="button" class="modal-close" aria-label="Schließen">×</button>
+            </div>
+
+            {% if login_error %}
+                <div class="error">{{ login_error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/login" class="login-form">
+                <label for="pin">PIN</label>
+                <input id="pin" type="password" name="pin" placeholder="PIN eingeben" required>
+                <button type="submit">Anmelden</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function openLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (!modal) return;
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            const input = modal.querySelector('input[name="pin"]');
+            if (input) setTimeout(() => input.focus(), 100);
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('loginModal');
+            if (!modal) return;
+
+            const shouldOpen = modal.classList.contains('is-open');
+            if (shouldOpen) {
+                openLoginModal();
+            }
+
+            document.querySelectorAll('.login-trigger').forEach(function (button) {
+                button.addEventListener('click', openLoginModal);
+            });
+
+            modal.querySelectorAll('[data-close-login="true"], .modal-close').forEach(function (element) {
+                element.addEventListener('click', closeLoginModal);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+                    closeLoginModal();
+                }
+            });
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(function () {});
+            });
+        }
+
+        setInterval(() => {
+        fetch("/api/einkaufsliste")
+            .then(r => r.json())
+            .then(serverLists => {
+                lists = serverLists;
+                saveLocal();
+                renderList();
+            })
+            .catch(() => {
+                // offline → lokale Daten weiter nutzen
+            });
+    }, 5000);
+    </script>
 </body>
 </html>

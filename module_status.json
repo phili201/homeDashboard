@@ -1,0 +1,10 @@
+{
+    "calendar": "ready",
+    "recipes": "ready",
+    "pv": "ready",
+    "abfall": "ready",
+    "weather": "ready",
+    "zug": "error",
+    "alexa": "disabled",
+    "system": "ready"
+}

@@ -4,57 +4,80 @@
 {% block content %}
 <h1>Adminbereich</h1>
 
+<!-- ===========================
+     NEU: Modul-Manager
+=========================== -->
 <div class="card" style="margin-bottom: 20px;">
-    <h3>Neuen Benutzer anlegen</h3>
-    <form method="POST" action="/admin/add_user">
-        <label>Name</label>
-        <input name="name">
+    <h3>Modul-Manager</h3>
+    <p>Steuere Module, aktiviere/deaktiviere sie oder setze den Baustellenmodus.</p>
 
-        <label>PIN</label>
-        <input name="pin">
+    <table>
+        <tr>
+            <th>Modul</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+        </tr>
 
-        <label>Kalender-ID</label>
-        <input name="calendar_id">
+        {% for module, state in module_status.items() %}
+        <tr>
+            <td>{{ module }}</td>
+            <td>{{ state }}</td>
+            <td>
+                <a href="/api/admin/set_status/{{ module }}/ready">
+                    <button style="background:#22c55e;">Fertig</button>
+                </a>
 
-        <label>Rolle</label>
-        <select name="role">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-        </select>
+                <a href="/api/admin/set_status/{{ module }}/work">
+                    <button style="background:#f59e0b;">Baustelle</button>
+                </a>
 
-        <label>Email</label>
-        <input name="email">
+                <a href="/api/admin/set_status/{{ module }}/disabled">
+                    <button style="background:#ef4444;">Deaktivieren</button>
+                </a>
 
-        <!-- Kalender 1 -->
-        <h4>Kalender 1</h4>
+                <a href="/api/admin/set_status/{{ module }}/error">
+                    <button style="background:#3b82f6;">Fehler</button>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 
-        <label>Kalender 1 Name:</label>
-        <input type="text" name="ics_name_1">
 
-        <label>Kalender 1 Farbe:</label>
-        <input type="color" name="ics_color_1" value="#3a82f7">
+<!-- ===========================
+     NEU: PIN-Manager
+=========================== -->
+<div class="card" style="margin-bottom: 20px;">
+    <h3>PIN-Manager</h3>
 
-        <label>Kalender 1 ICS‑URL:</label>
-        <input type="text" name="ics_url_1">
+    <form method="POST" action="/admin/change_pin">
+        <label>Benutzer-PIN ändern</label>
+        <input name="user_pin" placeholder="Neue Benutzer-PIN">
 
-        <hr>
+        <label>Admin-PIN ändern</label>
+        <input name="admin_pin" placeholder="Neue Admin-PIN">
 
-        <!-- Kalender 2 -->
-        <h4>Kalender 2</h4>
-
-        <label>Kalender 2 Name:</label>
-        <input type="text" name="ics_name_2">
-
-        <label>Kalender 2 Farbe:</label>
-        <input type="color" name="ics_color_2" value="#2ecc71">
-
-        <label>Kalender 2 ICS‑URL:</label>
-        <input type="text" name="ics_url_2">
-
-        <button type="submit">Benutzer hinzufügen</button>
+        <button type="submit">PINs speichern</button>
     </form>
 </div>
 
+
+<!-- ===========================
+     NEU: Systemstatus
+=========================== -->
+<div class="card" style="margin-bottom: 20px;">
+    <h3>Systemstatus</h3>
+
+    <p>Benutzer insgesamt: {{ users|length }}</p>
+    <p>Module geladen: {{ module_status|length }}</p>
+    <p>Serverstatus: OK</p>
+</div>
+
+
+<!-- ===========================
+     Benutzerverwaltung (bestehend)
+=========================== -->
 <h2>Benutzerliste</h2>
 
 <div class="grid">
@@ -65,7 +88,6 @@
         <p>Rolle: {{ user.role }}</p>
         <p>Email: {{ user.email }}</p>
 
-        <!-- Kalender anzeigen -->
         {% if user.ics_urls %}
             <h4>Kalender:</h4>
             <ul>
@@ -100,4 +122,5 @@
     </div>
     {% endfor %}
 </div>
+
 {% endblock %}

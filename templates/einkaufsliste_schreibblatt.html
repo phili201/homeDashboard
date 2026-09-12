@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Schreibblatt{% endblock %}
+
+{% block content %}
+<h1>Schreibblatt</h1>
+
+<button onclick="window.location.href='/einkaufsliste'">Zur Einkaufsliste</button>
+
+<textarea id="paper-input" 
+          placeholder="Hier wie auf Papier schreiben..."
+          style="width:100%; height:300px; font-size:20px;"></textarea>
+
+<br><br>
+<button onclick="processPaper()">Übernehmen</button>
+
+<script>
+// -----------------------------
+// Variablen aus der Einkaufsliste
+// -----------------------------
+let currentList = localStorage.getItem("einkaufsliste_currentList") || "haushalt";
+
+let lists = {
+    haushalt: [],
+    schule: [],
+    urlaub: []
+};
+
+// -----------------------------
+// Lokale Daten laden
+// -----------------------------
+function loadLocal() {
+    const raw = localStorage.getItem("einkaufsliste_multi");
+    if (raw) {
+        try { lists = JSON.parse(raw); } catch(e) {}
+    }
+}
+loadLocal();
+
+// -----------------------------
+// Lokale Daten speichern
+// -----------------------------
+function saveLocal() {
+    localStorage.setItem("einkaufsliste_multi", JSON.stringify(lists));
+}
+
+// -----------------------------
+// Server Sync
+// -----------------------------
+function syncToServer() {
+    fetch("/api/einkaufsliste", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({lists})
+    });
+}
+
+// -----------------------------
+// Kategorie-Erkennung
+// -----------------------------
+function detectCategory(name) {
+    const n = name.toLowerCase();
+
+    if (n.includes("milch")) return "Milchprodukte";
+    if (n.includes("joghurt")) return "Milchprodukte";
+    if (n.includes("käse")) return "Milchprodukte";
+    if (n.includes("butter")) return "Milchprodukte";
+
+    if (n.includes("cola") || n.includes("fanta") || n.includes("saft") || n.includes("wasser") || n.includes("tee") || n.includes("kaffee"))
+        return "Getränke";
+
+    const obst = ["apfel", "banane", "birne", "orange", "kiwi", "traube"];
+    if (obst.some(w => n.includes(w))) return "Obst";
+
+    const gemuese = ["tomate", "gurke", "paprika", "zwiebel", "karotte", "salat"];
+    if (gemuese.some(w => n.includes(w))) return "Gemüse";
+
+    const tk = ["pizza", "eis", "pommes", "lasagne", "tk"];
+    if (tk.some(w => n.includes(w))) return "Tiefkühl";
+
+    const haushalt = ["schwamm", "seife", "spülmittel", "tuch", "reiniger"];
+    if (haushalt.some(w => n.includes(w))) return "Haushalt";
+
+    return "Sonstiges";
+}
+
+// -----------------------------
+// Papier-Eingabe verarbeiten
+// -----------------------------
+function processPaper() {
+    const raw = document.getElementById("paper-input").value.trim();
+    if (!raw) return;
+
+    const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+    lines.forEach(line => {
+        let amount = 1;
+        let name = line;
+
+        const match = line.match(/^(\d+)\s*(x|X|Stück|Packungen)?\s+(.*)$/);
+        if (match) {
+            amount = parseInt(match[1]);
+            name = match[3].trim();
+        }
+
+        if (name.toLowerCase() === "milch") {
+            name = "Milch 1,5%";
+        }
+
+        const category = detectCategory(name);
+        const displayName = amount > 1 ? `${amount}x ${name}` : name;
+
+        lists[currentList].push({
+            name: displayName,
+            category,
+            done: false
+        });
+    });
+
+    saveLocal();
+    syncToServer();
+    window.location.href = "/einkaufsliste";
+}
+
+</script>
+{% endblock %}

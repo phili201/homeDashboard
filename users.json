@@ -17,7 +17,6 @@
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-
         "ics_urls": [
             {
                 "name": "Privat",
@@ -26,7 +25,6 @@
             }
         ]
     },
-
     "1234": {
         "name": "Test",
         "calendar_id": "test",
@@ -45,7 +43,6 @@
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-
         "ics_urls": [
             {
                 "name": "Privat",
@@ -54,7 +51,6 @@
             }
         ]
     },
-
     "9999": {
         "name": "autoTest2",
         "calendar_id": "",
@@ -73,7 +69,6 @@
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-
         "ics_urls": [
             {
                 "name": "Privat",
@@ -82,7 +77,6 @@
             }
         ]
     },
-
     "12345": {
         "name": "tt",
         "calendar_id": "tt",
@@ -101,7 +95,6 @@
         },
         "abfall_ics": "https://www.awb-warendorf.de/abfuhrkalender/kalender.ics?oid=10457",
         "shopping_shared": true,
-
         "ics_urls": [
             {
                 "name": "Privat",
