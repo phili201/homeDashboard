@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, redirect, session, abort, mak
 import json
 from datetime import datetime
 from pv_module import get_pv_data
-from abfall_module import load_abfall_events, build_month_view
+from abfall_module import load_abfall_events, build_month_view, get_tomorrow_abfall
 from rezepte_api import search_recipes, get_recipe_details
 from ics import Calendar
 import requests
+from pywebpush import webpush, WebPushException
 
 app = Flask(__name__)
 app.secret_key = "Rhode_Rhode_rhode_RHode"
@@ -32,6 +33,11 @@ with open('users.json', 'r') as f:
     users = json.load(f)
 
 EINKAUFSLISTE_PATH = "einkaufsliste.json"
+PUSH_SUBSCRIPTIONS_PATH = "push_subscriptions.json"
+VAPID_PRIVATE_KEY = """MHcCAQEEIIYrAy5Jl6g2SHDfILiLhsrPJwB42ljlocTxAT8n9CCyoAoGCCqGSM49
+AwEHoUQDQgAESaJszPEbJYy2kFMuZ/s3Em7DhxmR6TQQwXK1b5esTKH9YrwaaGs9
+Euy+w/loB5eWkihHCLHnYXMfxpNYCovy6Q=="""
+VAPID_CLAIMS = {"sub": "mailto:webmaster@homedashboard.de"}
 
 
 # ---------------------------------------------------------
@@ -59,7 +65,12 @@ def require_user():
 def require_admin():
     if "role" not in session or session["role"] != "admin":
         return redirect("/dashboard?login=1")
+
+    if request.cookies.get("auth_admin") != "adminXYZ":
+        abort(403)
+
     return None
+
 
 
 LEGACY_MODULE_STATUS_ALIASES = {
@@ -98,6 +109,31 @@ def load_einkaufsliste():
 def save_einkaufsliste(lists):
     with open(EINKAUFSLISTE_PATH, "w") as f:
         json.dump(lists, f, indent=4)
+
+
+def load_push_subscriptions():
+    try:
+        with open(PUSH_SUBSCRIPTIONS_PATH) as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_push_subscriptions(subs):
+    with open(PUSH_SUBSCRIPTIONS_PATH, "w") as f:
+        json.dump(subs, f, indent=4)
+
+def send_push_to_all(title, body):
+    subs = load_push_subscriptions()
+    for sub in subs:
+        try:
+            webpush(
+                subscription_info=sub,
+                data=json.dumps({"title": title, "body": body}),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
+            )
+        except WebPushException as e:
+            print("Push-Fehler:", e)
 
 
 # ---------------------------------------------------------
@@ -149,7 +185,27 @@ def api_events(username):
 @app.route("/auth")
 def auth():
     resp = make_response("Cookie gesetzt – Zugriff erlaubt.")
-    resp.set_cookie("auth", "polizei123", max_age=99999999)
+    resp.set_cookie(
+    "auth",
+    "polizei123",
+    max_age=99999999,
+    secure=True,
+    httponly=True,
+    samesite="Strict"
+)
+    return resp
+
+@app.route("/auth_admin")
+def auth_admin():
+    resp = make_response("Admin-Cookie gesetzt.")
+    resp.set_cookie(
+        "auth_admin",
+        "adminXYZ",
+        max_age=99999999,
+        secure=True,
+        httponly=True,
+        samesite="Strict"
+    )
     return resp
 
 @app.errorhandler(403)
@@ -182,6 +238,49 @@ def inject_modules():
 def index():
     # Startseite ist immer das Dashboard, ohne Login-Pflicht
     return redirect("/dashboard")
+
+@app.route("/api/push_subscribe", methods=["POST"])
+def api_push_subscribe():
+    sub = request.get_json() or {}
+    subs = load_push_subscriptions()
+
+    # einfache Duplikat-Prüfung
+    if sub not in subs:
+        subs.append(sub)
+        save_push_subscriptions(subs)
+
+    return {"status": "ok"}
+
+@app.route("/push_abfall_check")
+def push_abfall_check():
+    events = load_abfall_events()
+    tomorrow_events = get_tomorrow_abfall(events)
+
+    if not tomorrow_events:
+        return "Kein Abfall morgen."
+
+    names = ", ".join([e["name"] for e in tomorrow_events])
+
+    # schöner Titel je nach Abfallart
+    if "Restmüll" in names:
+        title = "🗑️ Restmüll morgen"
+        body = "Morgen wird Restmüll abgeholt.\nBitte die schwarze Tonne rausstellen!"
+    elif "Gelber Sack" in names:
+        title = "♻️ Gelber Sack morgen"
+        body = "Morgen wird der Gelbe Sack abgeholt.\nBitte die Säcke bereitstellen!"
+    elif "Biomüll" in names:
+        title = "🌿 Biomüll morgen"
+        body = "Morgen wird Biomüll abgeholt.\nBitte die grüne Tonne rausstellen!"
+    elif "Papier" in names:
+        title = "📦 Papier morgen"
+        body = "Morgen wird Papier abgeholt.\nBitte die blaue Tonne rausstellen!"
+    else:
+        title = "🗑️ Abfall morgen"
+        body = f"Morgen wird abgeholt: {names}"
+
+    send_push_to_all(title, body)
+    return "Push gesendet."
+
 
 
 @app.route("/login", methods=["GET", "POST"])

@@ -15,6 +15,11 @@
     <p id="live-time" style="font-size:22px; font-weight:bold;"></p>
     <p id="live-date" style="font-size:16px;"></p>
 </div>
+<div id="push-banner" style="display:none;" class="banner">
+  <p>🔔 Benachrichtigungen aktivieren</p>
+  <button onclick="subscribePush()">Aktivieren</button>
+</div>
+
 
 <script>
 function updateClock() {
@@ -71,10 +76,59 @@ async function renderModule(name, renderFunction) {
         document.getElementById(name).style.display = "none";
     }
 }
+async function subscribePush() {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        alert("Push wird von diesem Gerät nicht unterstützt.");
+        return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+        alert("Benachrichtigungen wurden nicht erlaubt.");
+        return;
+    }
+
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: "<DEIN_VAPID_PUBLIC_KEY_BASE64>"
+    });
+
+    await fetch("/api/push_subscribe", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(sub)
+    });
+
+    // Banner ausblenden
+    document.getElementById("push-banner").style.display = "none";
+}
+async function checkPushStatus() {
+    const banner = document.getElementById("push-banner");
+
+    // 1. Permission check
+    if (Notification.permission !== "granted") {
+        banner.style.display = "block";
+        return;
+    }
+
+    // 2. Subscription check
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg.pushManager.getSubscription();
+
+    if (!sub) {
+        banner.style.display = "block";
+        return;
+    }
+
+    // 3. Alles OK → Banner ausblenden
+    banner.style.display = "none";
+}
 
 
 setInterval(updateClock, 1000);
 updateClock();
+checkPushStatus();
 </script>
 
 

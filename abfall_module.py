@@ -95,3 +95,14 @@ def get_upcoming_abfall_events(events, days=7):
             upcoming.append(e)
 
     return sorted(upcoming, key=lambda x: x["begin"])
+
+def get_tomorrow_abfall(events):
+    tomorrow = datetime.now().date() + timedelta(days=1)
+    result = []
+
+    for e in events:
+        event_date = datetime.strptime(e["begin"], "%Y-%m-%d").date()
+        if event_date == tomorrow:
+            result.append(e)
+
+    return result
